@@ -207,7 +207,7 @@ export default function ConstructorPage() {
         components: [
           {
             id: 'vpc-1',
-            type: 'vpc',
+            type: 'vpc' as const,
             name: 'Web App VPC',
             x: 200,
             y: 100,
@@ -218,7 +218,7 @@ export default function ConstructorPage() {
           },
           {
             id: 'alb-1',
-            type: 'alb',
+            type: 'alb' as const,
             name: 'Web Load Balancer',
             x: 250,
             y: 150,
@@ -229,7 +229,7 @@ export default function ConstructorPage() {
           },
           {
             id: 'ec2-1',
-            type: 'ec2',
+            type: 'ec2' as const,
             name: 'Web Server 1',
             x: 300,
             y: 250,
@@ -240,7 +240,7 @@ export default function ConstructorPage() {
           },
           {
             id: 'ec2-2',
-            type: 'ec2',
+            type: 'ec2' as const,
             name: 'Web Server 2',
             x: 450,
             y: 250,
@@ -251,7 +251,7 @@ export default function ConstructorPage() {
           },
           {
             id: 'rds-1',
-            type: 'rds',
+            type: 'rds' as const,
             name: 'Database',
             x: 350,
             y: 350,
@@ -262,17 +262,17 @@ export default function ConstructorPage() {
           },
         ],
         connections: [
-          { id: 'conn-1', from: 'alb-1', to: 'ec2-1', type: 'network' },
-          { id: 'conn-2', from: 'alb-1', to: 'ec2-2', type: 'network' },
-          { id: 'conn-3', from: 'ec2-1', to: 'rds-1', type: 'network' },
-          { id: 'conn-4', from: 'ec2-2', to: 'rds-1', type: 'network' },
+          { id: 'conn-1', from: 'alb-1', to: 'ec2-1', type: 'network' as const },
+          { id: 'conn-2', from: 'alb-1', to: 'ec2-2', type: 'network' as const },
+          { id: 'conn-3', from: 'ec2-1', to: 'rds-1', type: 'network' as const },
+          { id: 'conn-4', from: 'ec2-2', to: 'rds-1', type: 'network' as const },
         ],
       },
       'data-pipeline': {
         components: [
           {
             id: 'vpc-1',
-            type: 'vpc',
+            type: 'vpc' as const,
             name: 'Data Pipeline VPC',
             x: 200,
             y: 100,
@@ -283,7 +283,7 @@ export default function ConstructorPage() {
           },
           {
             id: 's3-1',
-            type: 's3',
+            type: 's3' as const,
             name: 'Raw Data Bucket',
             x: 100,
             y: 200,
@@ -294,7 +294,7 @@ export default function ConstructorPage() {
           },
           {
             id: 'ec2-1',
-            type: 'ec2',
+            type: 'ec2' as const,
             name: 'Processing Server',
             x: 300,
             y: 200,
@@ -305,7 +305,7 @@ export default function ConstructorPage() {
           },
           {
             id: 's3-2',
-            type: 's3',
+            type: 's3' as const,
             name: 'Processed Data Bucket',
             x: 500,
             y: 200,
@@ -316,8 +316,8 @@ export default function ConstructorPage() {
           },
         ],
         connections: [
-          { id: 'conn-1', from: 's3-1', to: 'ec2-1', type: 'network' },
-          { id: 'conn-2', from: 'ec2-1', to: 's3-2', type: 'network' },
+          { id: 'conn-1', from: 's3-1', to: 'ec2-1', type: 'network' as const },
+          { id: 'conn-2', from: 'ec2-1', to: 's3-2', type: 'network' as const },
         ],
       },
     };
