@@ -58,28 +58,28 @@ export default function TutorialPage({ params }: TutorialPageProps) {
       try {
         setLoading(true);
         
-        // Fetch all services to get the service and tutorial data
-        const response = await fetch('/api/lessons');
+        // Fetch all topics to get the topic and tutorial data
+        const response = await fetch('/api/topics');
         const result = await response.json();
         
         if (result.success && result.data) {
-          // Find the service
-          const serviceInfo = result.data.find((s: any) => s.id === params.serviceId);
+          // Find the topic (using serviceId as topicId)
+          const topicInfo = result.data.find((t: any) => t.id === params.serviceId);
           
-          if (serviceInfo) {
-            // Create service object
+          if (topicInfo) {
+            // Create service object (using topic data)
             const serviceData: AWSService = {
-              id: serviceInfo.id,
-              name: serviceInfo.name,
-              description: serviceInfo.description,
-              icon: serviceInfo.icon,
-              color: serviceInfo.color,
-              tutorials: serviceInfo.tutorials || []
+              id: topicInfo.id,
+              name: topicInfo.name,
+              description: topicInfo.description,
+              icon: topicInfo.icon,
+              color: topicInfo.color,
+              tutorials: topicInfo.tutorials || []
             };
             setService(serviceData);
             
-            // Find the specific tutorial within the service
-            const tutorialInfo = serviceInfo.tutorials?.find((t: any) => t.id === params.tutorialId);
+            // Find the specific tutorial within the topic
+            const tutorialInfo = topicInfo.tutorials?.find((t: any) => t.id === params.tutorialId);
             
             if (tutorialInfo) {
               const tutorialData: AWSTutorial = {
@@ -97,7 +97,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
               setError('Tutorial not found');
             }
           } else {
-            setError('Service not found');
+            setError('Topic not found');
           }
         } else {
           setError('Failed to fetch tutorial data');

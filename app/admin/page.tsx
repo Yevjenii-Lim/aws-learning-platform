@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { Settings, BookOpen, FileText, CreditCard, HelpCircle, Plus, Edit, Trash2, X, Eye, EyeOff, Search } from 'lucide-react';
 import Link from 'next/link';
+import TutorialForm from './components/TutorialForm';
+import FlashcardForm from './components/FlashcardForm';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('topics');
@@ -10,9 +12,14 @@ export default function AdminPage() {
   const [isAdding, setIsAdding] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [showTutorialForm, setShowTutorialForm] = useState(false);
+  const [editingTutorial, setEditingTutorial] = useState<any>(null);
+  const [showFlashcardForm, setShowFlashcardForm] = useState(false);
+  const [editingFlashcard, setEditingFlashcard] = useState<any>(null);
 
   // Real data from AWS DynamoDB
   const [topics, setTopics] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [tutorials, setTutorials] = useState<any[]>([]);
   const [flashcards, setFlashcards] = useState<any[]>([]);
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
@@ -48,26 +55,25 @@ export default function AdminPage() {
         setQuizQuestions(quizData.data || []);
       }
 
-      // Fetch tutorials from lessons API
-      const lessonsResponse = await fetch('/api/lessons');
-      const lessonsData = await lessonsResponse.json();
-      
-      // Extract tutorials from lessons data
+      // Extract tutorials from topics data
       const allTutorials: any[] = [];
-      if (lessonsData.success && lessonsData.data) {
-        lessonsData.data.forEach((service: any) => {
-          if (service.tutorials && Array.isArray(service.tutorials)) {
-            service.tutorials.forEach((tutorial: any) => {
+      if (topicsData.success && topicsData.data) {
+        topicsData.data.forEach((topic: any) => {
+          if (topic.tutorials && Array.isArray(topic.tutorials)) {
+            topic.tutorials.forEach((tutorial: any) => {
               allTutorials.push({
                 ...tutorial,
-                topicId: service.id,
-                topicName: service.name
+                topicId: topic.id,
+                topicName: topic.name
               });
             });
           }
         });
       }
       setTutorials(allTutorials);
+      
+      // Set services as empty array since we're not using services anymore
+      setServices([]);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -79,35 +85,87 @@ export default function AdminPage() {
   // Removed password authentication
 
   const handleAdd = (type: string) => {
-    setIsAdding(true);
-    setEditingItem(null);
+    if (type === 'tutorials') {
+      setShowTutorialForm(true);
+      setEditingTutorial(null);
+    } else if (type === 'flashcards') {
+      setShowFlashcardForm(true);
+      setEditingFlashcard(null);
+    } else {
+      setIsAdding(true);
+      setEditingItem(null);
+    }
   };
 
   const handleEdit = (item: any, type: string) => {
-    setEditingItem({ ...item, type });
-    setIsAdding(false);
+    if (type === 'tutorials') {
+      setShowTutorialForm(true);
+      setEditingTutorial(item);
+    } else if (type === 'flashcards') {
+      setShowFlashcardForm(true);
+      setEditingFlashcard(item);
+    } else {
+      setEditingItem({ ...item, type });
+      setIsAdding(false);
+    }
   };
 
   const handleDelete = async (id: string, type: string) => {
     if (confirm('Are you sure you want to delete this item?')) {
       try {
-        // TODO: Implement actual delete API calls
-        console.log(`Deleting ${type} with id: ${id}`);
-        
-        // For now, just remove from local state
-        switch (type) {
-          case 'topics':
-            setTopics(topics.filter((t: any) => t.id !== id));
-            break;
-          case 'tutorials':
-            setTutorials(tutorials.filter((t: any) => t.id !== id));
-            break;
-          case 'flashcards':
-            setFlashcards(flashcards.filter((f: any) => f.id !== id));
-            break;
-          case 'quiz':
-            setQuizQuestions(quizQuestions.filter((q: any) => q.id !== id));
-            break;
+        if (type === 'tutorials') {
+          // Find the tutorial to get its topicId
+          const tutorial = tutorials.find((t: any) => t.id === id);
+          if (!tutorial) {
+            alert('Tutorial not found');
+            return;
+          }
+
+          // Call the API to delete tutorial from the topic
+          const response = await fetch(`/api/topics/${tutorial.topicId}/tutorials?tutorialId=${id}`, {
+            method: 'DELETE',
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            // Refresh data to get the updated state
+            await fetchAllData();
+            alert('Tutorial deleted successfully');
+          } else {
+            alert('Error deleting tutorial: ' + result.error);
+          }
+        } else if (type === 'flashcards') {
+          // Call the API to delete flashcard
+          const response = await fetch(`/api/flashcards?id=${id}`, {
+            method: 'DELETE',
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            // Refresh data to get the updated state
+            await fetchAllData();
+            alert('Flashcard deleted successfully');
+          } else {
+            alert('Error deleting flashcard: ' + result.error);
+          }
+        } else {
+          // TODO: Implement actual delete API calls for other types
+          console.log(`Deleting ${type} with id: ${id}`);
+          
+          // For now, just remove from local state
+          switch (type) {
+            case 'topics':
+              setTopics(topics.filter((t: any) => t.id !== id));
+              break;
+            case 'flashcards':
+              setFlashcards(flashcards.filter((f: any) => f.id !== id));
+              break;
+            case 'quiz':
+              setQuizQuestions(quizQuestions.filter((q: any) => q.id !== id));
+              break;
+          }
         }
       } catch (error) {
         console.error('Error deleting item:', error);
@@ -163,6 +221,87 @@ export default function AdminPage() {
   const handleCancel = () => {
     setIsAdding(false);
     setEditingItem(null);
+  };
+
+  const handleTutorialSave = async (tutorial: any) => {
+    try {
+      console.log('Saving tutorial:', tutorial);
+      
+      if (!tutorial.topicId) {
+        alert('Please select a topic for this tutorial.');
+        return;
+      }
+      
+      console.log('Making API call to:', `/api/topics/${tutorial.topicId}/tutorials`);
+      
+      // Call the API to save tutorial directly to the topic
+      const response = await fetch(`/api/topics/${tutorial.topicId}/tutorials`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(tutorial),
+      });
+
+      console.log('API response status:', response.status);
+      const result = await response.json();
+      console.log('API response:', result);
+      
+      if (result.success) {
+        // Refresh data to get the updated state
+        await fetchAllData();
+        setShowTutorialForm(false);
+        setEditingTutorial(null);
+        alert(result.message);
+      } else {
+        alert('Error saving tutorial: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error saving tutorial:', error);
+      alert('Error saving tutorial');
+    }
+  };
+
+  const handleTutorialCancel = () => {
+    setShowTutorialForm(false);
+    setEditingTutorial(null);
+  };
+
+  const handleFlashcardSave = async (flashcard: any) => {
+    try {
+      console.log('Saving flashcard:', flashcard);
+      
+      const method = editingFlashcard ? 'PUT' : 'POST';
+      const response = await fetch('/api/flashcards', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(flashcard),
+      });
+
+      console.log('API response status:', response.status);
+      const result = await response.json();
+      console.log('API response:', result);
+      
+      if (result.success) {
+        // Refresh data to get the updated state
+        await fetchAllData();
+        setShowFlashcardForm(false);
+        setEditingFlashcard(null);
+        alert(result.message);
+      } else {
+        alert('Error saving flashcard: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error saving flashcard:', error);
+      alert('Error saving flashcard');
+    }
+  };
+
+  const handleFlashcardCancel = () => {
+    setShowFlashcardForm(false);
+    setEditingFlashcard(null);
   };
 
   // Removed authentication check - admin panel is now directly accessible
@@ -241,13 +380,21 @@ export default function AdminPage() {
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
             </div>
-            <button
-              onClick={() => handleAdd(activeTab)}
-              className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 flex items-center"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add {activeTab.slice(0, -1)}
-            </button>
+            <div className="flex items-center space-x-4">
+              <span className="text-sm text-gray-500">
+                {activeTab === 'topics' && `${topics.length} topics`}
+                {activeTab === 'tutorials' && `${tutorials.length} tutorials • ${services.length} services`}
+                {activeTab === 'flashcards' && `${flashcards.length} flashcards`}
+                {activeTab === 'quiz' && `${quizQuestions.length} questions`}
+              </span>
+              <button
+                onClick={() => handleAdd(activeTab)}
+                className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 flex items-center"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add {activeTab.slice(0, -1)}
+              </button>
+            </div>
           </div>
 
           {/* Loading State */}
@@ -508,6 +655,26 @@ export default function AdminPage() {
           )}
         </div>
       </main>
+
+      {/* Tutorial Form Modal */}
+      {showTutorialForm && (
+        <TutorialForm
+          topics={topics}
+          services={[]}
+          onSave={handleTutorialSave}
+          onCancel={handleTutorialCancel}
+          editingTutorial={editingTutorial}
+        />
+      )}
+
+      {/* Flashcard Form Modal */}
+      {showFlashcardForm && (
+        <FlashcardForm
+          flashcard={editingFlashcard}
+          onSave={handleFlashcardSave}
+          onCancel={handleFlashcardCancel}
+        />
+      )}
     </div>
   );
 } 

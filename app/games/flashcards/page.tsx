@@ -86,6 +86,22 @@ const topics: Topic[] = [
     icon: <Monitor className="h-8 w-8" />,
     color: 'bg-indigo-500',
     cardCount: 0
+  },
+  {
+    id: 'serverless',
+    name: 'Serverless',
+    description: 'Learn Lambda, ECS, and container services',
+    icon: <Server className="h-8 w-8" />,
+    color: 'bg-indigo-500',
+    cardCount: 0
+  },
+  {
+    id: 'general',
+    name: 'General',
+    description: 'General AWS concepts and best practices',
+    icon: <BookOpen className="h-8 w-8" />,
+    color: 'bg-gray-500',
+    cardCount: 0
   }
 ];
 

@@ -65,28 +65,16 @@ export default function TopicPage() {
         return;
       }
 
-      // Fetch tutorials from lessons API
-      const lessonsResponse = await fetch('/api/lessons');
-      const lessonsResult = await lessonsResponse.json();
-      
-      if (lessonsResult.success && lessonsResult.data && foundTopic) {
-        // Filter tutorials based on topic services
-        const topicServices = foundTopic.services || [];
-        const allTutorials: Tutorial[] = [];
-        
-        lessonsResult.data.forEach((service: any) => {
-          if (topicServices.includes(service.id) && service.tutorials) {
-            service.tutorials.forEach((tutorial: any) => {
-              allTutorials.push({
-                ...tutorial,
-                serviceId: service.id,
-                serviceName: service.name
-              });
-            });
-          }
-        });
-        
-        setTutorials(allTutorials);
+      // Get tutorials directly from the topic
+      if (foundTopic && foundTopic.tutorials) {
+        const topicTutorials: Tutorial[] = foundTopic.tutorials.map((tutorial: any) => ({
+          ...tutorial,
+          serviceId: topicId, // Use topicId as serviceId for routing
+          serviceName: foundTopic.name
+        }));
+        setTutorials(topicTutorials);
+      } else {
+        setTutorials([]);
       }
     } catch (err) {
       console.error('Error fetching topic data:', err);
