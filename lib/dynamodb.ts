@@ -5,17 +5,23 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 const region = process.env.REGION || process.env.AWS_REGION || 'us-east-1';
 
 // Check if we're in AWS environment (Amplify/Lambda) or local development
-const isAWSEnvironment = process.env.AWS_REGION || process.env.REGION;
+// More reliable detection for AWS environment
+const isAWSEnvironment = process.env.AWS_LAMBDA_FUNCTION_NAME || 
+                        process.env.AWS_EXECUTION_ENV || 
+                        process.env.AWS_REGION ||
+                        process.env.NODE_ENV === 'production';
 
 let client: DynamoDBClient;
 
 if (isAWSEnvironment) {
   // In AWS environment, use default credentials (IAM role)
+  console.log('Using IAM role credentials for AWS environment');
   client = new DynamoDBClient({
     region,
   });
 } else {
   // Local development - use access keys
+  console.log('Using access key credentials for local development');
   const accessKeyId = process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
   const secretAccessKey = process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
   
