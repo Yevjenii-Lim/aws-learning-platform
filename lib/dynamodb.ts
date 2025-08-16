@@ -3,16 +3,34 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 // Initialize DynamoDB client
 const region = process.env.REGION || process.env.AWS_REGION || 'us-east-1';
-const accessKeyId = process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
-const secretAccessKey = process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
 
-const client = new DynamoDBClient({
-  region,
-  credentials: {
-    accessKeyId: accessKeyId!,
-    secretAccessKey: secretAccessKey!,
-  },
-});
+// Check if we're in AWS environment (Amplify/Lambda) or local development
+const isAWSEnvironment = process.env.AWS_REGION || process.env.REGION;
+
+let client: DynamoDBClient;
+
+if (isAWSEnvironment) {
+  // In AWS environment, use default credentials (IAM role)
+  client = new DynamoDBClient({
+    region,
+  });
+} else {
+  // Local development - use access keys
+  const accessKeyId = process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+  
+  if (!accessKeyId || !secretAccessKey) {
+    throw new Error('AWS credentials not found. Please set ACCESS_KEY_ID and SECRET_ACCESS_KEY environment variables for local development.');
+  }
+  
+  client = new DynamoDBClient({
+    region,
+    credentials: {
+      accessKeyId,
+      secretAccessKey,
+    },
+  });
+}
 
 export const dynamoDB = DynamoDBDocumentClient.from(client);
 
