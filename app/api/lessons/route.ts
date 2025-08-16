@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAllServices, getServiceById, getTutorialById } from '../../../lib/dynamodb';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const serviceId = searchParams.get('serviceId');
     const tutorialId = searchParams.get('tutorialId');
 

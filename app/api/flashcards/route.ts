@@ -2,11 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { dynamoDB } from '../../../lib/dynamodb';
 import { PutCommand, DeleteCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
 
+export const dynamic = 'force-dynamic';
+
 const FLASHCARDS_TABLE = 'aws-learning-flashcards';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const category = searchParams.get('category');
 
     // Import ScanCommand here to avoid issues
@@ -137,7 +139,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = request.nextUrl;
     const id = searchParams.get('id');
 
     if (!id) {
