@@ -7,7 +7,6 @@ import {
   ChevronRight, 
   CheckCircle, 
   Circle, 
-  Terminal, 
   Monitor, 
   Lightbulb,
   Clock,
@@ -15,7 +14,26 @@ import {
   BookOpen,
   ArrowLeft
 } from 'lucide-react';
-import { awsServices, AWSService, AWSTutorial, AWSStep } from '../../../../data/aws-services';
+// Types for AWS data
+interface AWSService {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  tutorials: AWSTutorial[];
+}
+
+interface AWSTutorial {
+  id: string;
+  title: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  estimatedTime: string;
+  category: string;
+  steps: any[];
+  learningObjectives: string[];
+}
 import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -30,28 +48,90 @@ interface TutorialPageProps {
 export default function TutorialPage({ params }: TutorialPageProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
-  const [showCLI, setShowCLI] = useState(false);
   const [service, setService] = useState<AWSService | null>(null);
   const [tutorial, setTutorial] = useState<AWSTutorial | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const foundService = awsServices.find(s => s.id === params.serviceId);
-    if (foundService) {
-      setService(foundService);
-      const foundTutorial = foundService.tutorials.find(t => t.id === params.tutorialId);
-      if (foundTutorial) {
-        setTutorial(foundTutorial);
+    async function fetchTutorial() {
+      try {
+        setLoading(true);
+        
+        // Fetch all services to get the service and tutorial data
+        const response = await fetch('/api/lessons');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+          // Find the service
+          const serviceInfo = result.data.find((s: any) => s.id === params.serviceId);
+          
+          if (serviceInfo) {
+            // Create service object
+            const serviceData: AWSService = {
+              id: serviceInfo.id,
+              name: serviceInfo.name,
+              description: serviceInfo.description,
+              icon: serviceInfo.icon,
+              color: serviceInfo.color,
+              tutorials: serviceInfo.tutorials || []
+            };
+            setService(serviceData);
+            
+            // Find the specific tutorial within the service
+            const tutorialInfo = serviceInfo.tutorials?.find((t: any) => t.id === params.tutorialId);
+            
+            if (tutorialInfo) {
+              const tutorialData: AWSTutorial = {
+                id: tutorialInfo.id,
+                title: tutorialInfo.title,
+                description: tutorialInfo.description,
+                difficulty: tutorialInfo.difficulty,
+                estimatedTime: tutorialInfo.estimatedTime,
+                category: tutorialInfo.category,
+                steps: tutorialInfo.steps || [],
+                learningObjectives: tutorialInfo.learningObjectives || []
+              };
+              setTutorial(tutorialData);
+            } else {
+              setError('Tutorial not found');
+            }
+          } else {
+            setError('Service not found');
+          }
+        } else {
+          setError('Failed to fetch tutorial data');
+        }
+      } catch (err) {
+        console.error('Error fetching tutorial:', err);
+        setError('Failed to load tutorial');
+      } finally {
+        setLoading(false);
       }
     }
+
+    fetchTutorial();
   }, [params.serviceId, params.tutorialId]);
 
-  if (!service || !tutorial) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">☁️</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading Tutorial</h1>
+          <p className="text-gray-600">Fetching tutorial from AWS DynamoDB...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !service || !tutorial) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="text-6xl mb-4">😕</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Tutorial Not Found</h1>
-          <p className="text-gray-600 mb-4">The tutorial you're looking for doesn't exist.</p>
+          <p className="text-gray-600 mb-4">{error || 'The tutorial you\'re looking for doesn\'t exist.'}</p>
           <Link href="/" className="aws-button">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
@@ -126,7 +206,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
               
               {/* Progress Bar */}
               <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-600 mb-2">
+                <div className="flex justify-between text-sm text-gray-700 mb-2">
                   <span>{completedSteps.length} of {tutorial.steps.length} completed</span>
                   <span>{Math.round(progress)}%</span>
                 </div>
@@ -149,7 +229,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                     className={`w-full text-left p-3 rounded-lg transition-colors ${
                       index === currentStep
                         ? 'bg-aws-orange text-white'
-                        : 'hover:bg-gray-50'
+                        : 'hover:bg-gray-50 text-gray-700'
                     }`}
                   >
                     <div className="flex items-center">
@@ -160,10 +240,10 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                         {getStepStatus(index) === 'completed' ? (
                           <CheckCircle className="h-4 w-4" />
                         ) : (
-                          <span>{index + 1}</span>
+                          <span className="text-gray-700">{index + 1}</span>
                         )}
                       </div>
-                      <span className="ml-3 text-sm font-medium">{step.title}</span>
+                      <span className="ml-3 text-sm font-medium text-gray-700">{step.title}</span>
                     </div>
                   </button>
                 ))}
@@ -172,7 +252,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
               {/* Tutorial Info */}
               <div className="mt-6 pt-6 border-t border-gray-200">
                 <h4 className="font-medium text-gray-900 mb-3">Learning Objectives</h4>
-                <ul className="space-y-2 text-sm text-gray-600">
+                <ul className="space-y-2 text-sm text-gray-700">
                   {tutorial.learningObjectives.map((objective, index) => (
                     <li key={index} className="flex items-start">
                       <Target className="h-4 w-4 mr-2 mt-0.5 text-aws-orange flex-shrink-0" />
@@ -228,66 +308,24 @@ export default function TutorialPage({ params }: TutorialPageProps) {
 
                 {/* Step Content */}
                 <div className="p-6">
-                  {/* Instructions Toggle */}
-                  <div className="flex space-x-2 mb-6">
-                    <button
-                      onClick={() => setShowCLI(false)}
-                      className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        !showCLI ? 'bg-aws-orange text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <Monitor className="h-4 w-4 mr-2" />
-                      Console Instructions
-                    </button>
-                    <button
-                      onClick={() => setShowCLI(true)}
-                      className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        showCLI ? 'bg-aws-orange text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                      }`}
-                    >
-                      <Terminal className="h-4 w-4 mr-2" />
-                      CLI Commands
-                    </button>
-                  </div>
-
-                  {/* Instructions Content */}
+                  {/* Console Instructions */}
                   <div className="mb-6">
-                    {!showCLI ? (
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-4">Console Instructions</h3>
-                        <ol className="space-y-3">
-                          {currentStepData.consoleInstructions.map((instruction, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
-                                {index + 1}
-                              </span>
-                              <span className="text-gray-700">{instruction}</span>
-                            </li>
-                          ))}
-                        </ol>
-                      </div>
-                    ) : (
-                      <div>
-                        <h3 className="font-semibold text-gray-900 mb-4">CLI Commands</h3>
-                        <div className="space-y-3">
-                          {currentStepData.cliCommands.map((command, index) => (
-                            <div key={index} className="bg-gray-900 rounded-lg p-4">
-                              <SyntaxHighlighter
-                                language="bash"
-                                style={tomorrow}
-                                customStyle={{
-                                  margin: 0,
-                                  background: 'transparent',
-                                  fontSize: '14px',
-                                }}
-                              >
-                                {command}
-                              </SyntaxHighlighter>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                    <div className="mb-4">
+                      <h3 className="font-semibold text-gray-900 flex items-center">
+                        <Monitor className="h-5 w-5 mr-2 text-aws-orange" />
+                        Console Instructions
+                      </h3>
+                    </div>
+                    <ol className="space-y-3">
+                      {currentStepData.consoleInstructions.map((instruction, index) => (
+                        <li key={index} className="flex items-start">
+                          <span className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
+                            {index + 1}
+                          </span>
+                          <span className="text-gray-700">{instruction}</span>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
 
                   {/* Tips */}
