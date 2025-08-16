@@ -13,9 +13,22 @@ export async function GET(request: NextRequest) {
       data: topics 
     });
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Topics API Error:', error);
+    
+    // Return more specific error information
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorDetails = {
+      message: errorMessage,
+      name: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined
+    };
+    
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { 
+        success: false, 
+        error: 'Internal server error',
+        details: errorDetails
+      },
       { status: 500 }
     );
   }
