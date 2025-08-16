@@ -38,7 +38,7 @@ export default function AdminForm({ type, item, onSave, onCancel }: AdminFormPro
   }, [item]);
 
   const handleInputChange = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev: any) => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {

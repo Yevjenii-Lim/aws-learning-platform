@@ -15,6 +15,7 @@ interface Topic {
   services: string[];
   tutorialCount: number;
   serviceCount: number;
+  tutorials?: any[];
 }
 
 interface Tutorial {
@@ -26,6 +27,8 @@ interface Tutorial {
   category: string;
   steps: any[];
   learningObjectives: string[];
+  serviceId?: string;
+  serviceName?: string;
 }
 
 export default function TopicPage() {

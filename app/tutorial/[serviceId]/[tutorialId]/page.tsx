@@ -317,7 +317,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                       </h3>
                     </div>
                     <ol className="space-y-3">
-                      {currentStepData.consoleInstructions.map((instruction, index) => (
+                      {currentStepData.consoleInstructions.map((instruction: any, index: number) => (
                         <li key={index} className="flex items-start">
                           <span className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
                             {index + 1}
@@ -335,7 +335,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                       <div>
                         <h4 className="font-medium text-blue-900 mb-2">Pro Tips</h4>
                         <ul className="space-y-1 text-sm text-blue-800">
-                          {currentStepData.tips.map((tip, index) => (
+                          {currentStepData.tips.map((tip: any, index: number) => (
                             <li key={index}>• {tip}</li>
                           ))}
                         </ul>
