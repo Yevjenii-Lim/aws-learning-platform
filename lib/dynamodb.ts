@@ -2,11 +2,29 @@ import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 // Initialize DynamoDB client
+const region = process.env.REGION || process.env.AWS_REGION || 'us-east-1';
+const accessKeyId = process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID;
+const secretAccessKey = process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY;
+
+console.log('DynamoDB Config:', {
+  region,
+  hasAccessKey: !!accessKeyId,
+  hasSecretKey: !!secretAccessKey,
+  envVars: {
+    REGION: process.env.REGION,
+    AWS_REGION: process.env.AWS_REGION,
+    ACCESS_KEY_ID: process.env.ACCESS_KEY_ID ? 'SET' : 'NOT_SET',
+    AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID ? 'SET' : 'NOT_SET',
+    SECRET_ACCESS_KEY: process.env.SECRET_ACCESS_KEY ? 'SET' : 'NOT_SET',
+    AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY ? 'SET' : 'NOT_SET'
+  }
+});
+
 const client = new DynamoDBClient({
-  region: process.env.REGION || process.env.AWS_REGION || 'us-east-1',
+  region,
   credentials: {
-    accessKeyId: process.env.ACCESS_KEY_ID || process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.SECRET_ACCESS_KEY || process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: accessKeyId!,
+    secretAccessKey: secretAccessKey!,
   },
 });
 
