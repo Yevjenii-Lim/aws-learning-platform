@@ -5,6 +5,7 @@ import { Settings, BookOpen, FileText, CreditCard, HelpCircle, Plus, Edit, Trash
 import Link from 'next/link';
 import TutorialForm from './components/TutorialForm';
 import FlashcardForm from './components/FlashcardForm';
+import { awsServices } from '../../data/aws-services';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('topics');
@@ -72,8 +73,8 @@ export default function AdminPage() {
       }
       setTutorials(allTutorials);
       
-      // Set services as empty array since we're not using services anymore
-      setServices([]);
+      // Set services from the awsServices data
+      setServices(awsServices);
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -660,7 +661,7 @@ export default function AdminPage() {
       {showTutorialForm && (
         <TutorialForm
           topics={topics}
-          services={[]}
+          services={services}
           onSave={handleTutorialSave}
           onCancel={handleTutorialCancel}
           editingTutorial={editingTutorial}

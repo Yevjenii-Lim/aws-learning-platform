@@ -28,6 +28,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
     estimatedTime: '',
     category: '',
     topicId: '',
+    services: [] as string[],
     steps: [] as Step[],
     learningObjectives: [] as string[]
   });
@@ -36,6 +37,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
   const [newConsoleInstruction, setNewConsoleInstruction] = useState('');
   const [newCliCommand, setNewCliCommand] = useState('');
   const [newTip, setNewTip] = useState('');
+  const [newService, setNewService] = useState('');
 
 
   useEffect(() => {
@@ -48,6 +50,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
         estimatedTime: editingTutorial.estimatedTime || '',
         category: editingTutorial.category || '',
         topicId: editingTutorial.topicId || '',
+        services: editingTutorial.services || [],
         steps: editingTutorial.steps || [],
         learningObjectives: editingTutorial.learningObjectives || []
       });
@@ -61,6 +64,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
         estimatedTime: '',
         category: '',
         topicId: '',
+        services: [],
         steps: [],
         learningObjectives: []
       });
@@ -172,6 +176,22 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
     setFormData(prev => ({
       ...prev,
       learningObjectives: prev.learningObjectives.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addService = () => {
+    if (!newService.trim()) return;
+    setFormData(prev => ({
+      ...prev,
+      services: [...prev.services, newService.trim()]
+    }));
+    setNewService('');
+  };
+
+  const removeService = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      services: prev.services.filter((_, i) => i !== index)
     }));
   };
 
@@ -307,6 +327,59 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
               placeholder="Brief description of what this tutorial covers..."
               required
             />
+          </div>
+
+          {/* AWS Services */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              AWS Services Covered
+            </label>
+            <div className="space-y-2">
+              {formData.services.map((service, index) => (
+                <div key={index} className="flex items-center space-x-2">
+                  <span className="flex-1 px-3 py-2 bg-blue-50 rounded-md text-sm text-gray-900 border border-blue-200">
+                    {service}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => removeService(index)}
+                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
+              <div className="flex space-x-2">
+                <select
+                  value={newService}
+                  onChange={(e) => setNewService(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-aws-orange focus:border-transparent text-gray-900"
+                >
+                  <option value="">Select a common AWS service</option>
+                  {services.map(service => (
+                    <option key={service.id} value={service.id}>
+                      {service.name}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  value={newService}
+                  onChange={(e) => setNewService(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addService())}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-aws-orange focus:border-transparent text-gray-900"
+                  placeholder="Or type custom service name"
+                />
+                <button
+                  type="button"
+                  onClick={addService}
+                  className="px-4 py-2 bg-aws-orange text-white rounded-md hover:bg-orange-600 transition-colors duration-200 flex items-center space-x-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Add</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Topic Association Preview */}
