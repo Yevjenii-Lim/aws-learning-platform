@@ -65,7 +65,7 @@ export default function HomePage() {
             });
           }
           
-          return {
+          const transformedTopic = {
             id: topic.id,
             name: topic.name,
             description: topic.description,
@@ -79,6 +79,18 @@ export default function HomePage() {
               serviceNameMap[serviceId] || serviceId.toUpperCase()
             )
           };
+          
+          // Debug logging for monitoring topic
+          if (topic.id === 'monitoring') {
+            console.log('Monitoring topic debug:', {
+              originalServices: topic.services,
+              tutorials: topic.tutorials?.map((t: any) => ({ title: t.title, services: t.services })),
+              aggregatedServices: Array.from(allServices),
+              finalServiceNames: transformedTopic.serviceNames
+            });
+          }
+          
+          return transformedTopic;
         });
         
         setLearningTopics(transformedTopics);
