@@ -4,16 +4,6 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 // Initialize DynamoDB client
 const region = process.env.REGION || process.env.AWS_REGION || 'us-east-1';
 
-// Debug environment variables
-console.log('=== DynamoDB Environment Debug ===');
-console.log('process.env.REGION:', process.env.REGION);
-console.log('process.env.AWS_REGION:', process.env.AWS_REGION);
-console.log('process.env.ACCESS_KEY_ID:', process.env.ACCESS_KEY_ID ? 'EXISTS' : 'NOT FOUND');
-console.log('process.env.SECRET_ACCESS_KEY:', process.env.SECRET_ACCESS_KEY ? 'EXISTS' : 'NOT FOUND');
-console.log('process.env.NODE_ENV:', process.env.NODE_ENV);
-console.log('Final region:', region);
-console.log('================================');
-
 // Check if we're in AWS environment (Amplify/Lambda) or local development
 // More reliable detection for AWS environment
 const isAWSEnvironment = process.env.AWS_LAMBDA_FUNCTION_NAME || 

@@ -52,20 +52,34 @@ export default function HomePage() {
         }
         
         // Transform the data to match our interface
-        const transformedTopics = topicsResult.data.map((topic: any) => ({
-          id: topic.id,
-          name: topic.name,
-          description: topic.description,
-          icon: topic.icon || '📚',
-          color: topic.color || 'bg-blue-500',
-          tutorials: topic.tutorials || [],
-          difficulty: topic.difficulty || 'Beginner',
-          tutorialCount: topic.tutorialCount,
-          services: topic.services || [],
-          serviceNames: (topic.services || []).map((serviceId: string) => 
-            serviceNameMap[serviceId] || serviceId.toUpperCase()
-          )
-        }));
+        const transformedTopics = topicsResult.data.map((topic: any) => {
+          // Aggregate services from all tutorials in this topic
+          const allServices = new Set<string>();
+          if (topic.tutorials && Array.isArray(topic.tutorials)) {
+            topic.tutorials.forEach((tutorial: any) => {
+              if (tutorial.services && Array.isArray(tutorial.services)) {
+                tutorial.services.forEach((service: string) => {
+                  allServices.add(service);
+                });
+              }
+            });
+          }
+          
+          return {
+            id: topic.id,
+            name: topic.name,
+            description: topic.description,
+            icon: topic.icon || '📚',
+            color: topic.color || 'bg-blue-500',
+            tutorials: topic.tutorials || [],
+            difficulty: topic.difficulty || 'Beginner',
+            tutorialCount: topic.tutorialCount,
+            services: Array.from(allServices),
+            serviceNames: Array.from(allServices).map((serviceId: string) => 
+              serviceNameMap[serviceId] || serviceId.toUpperCase()
+            )
+          };
+        });
         
         setLearningTopics(transformedTopics);
       } else {
