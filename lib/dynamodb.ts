@@ -87,6 +87,7 @@ export interface LearningTopic {
   color: string;
   difficulty: string;
   services: string[];
+  learningObjectives: string[];
   tutorialCount: number;
   serviceCount: number;
 }

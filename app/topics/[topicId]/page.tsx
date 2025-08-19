@@ -13,6 +13,7 @@ interface Topic {
   color: string;
   difficulty: string;
   services: string[];
+  learningObjectives: string[];
   tutorialCount: number;
   serviceCount: number;
   tutorials?: any[];
@@ -219,32 +220,45 @@ export default function TopicPage() {
             <div className="lg:col-span-1">
               <div className="bg-gray-50 rounded-lg p-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">What You'll Learn</h3>
-                <div className="space-y-3">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    </div>
-                    <span className="text-gray-700">Core concepts and fundamentals</span>
+                {topic.learningObjectives && topic.learningObjectives.length > 0 ? (
+                  <div className="space-y-3">
+                    {topic.learningObjectives.map((objective, index) => (
+                      <div key={index} className="flex items-start">
+                        <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                          <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                        </div>
+                        <span className="text-gray-700">{objective}</span>
+                      </div>
+                    ))}
                   </div>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      </div>
+                      <span className="text-gray-700">Core concepts and fundamentals</span>
                     </div>
-                    <span className="text-gray-700">Hands-on practical tutorials</span>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      </div>
+                      <span className="text-gray-700">Hands-on practical tutorials</span>
                     </div>
-                    <span className="text-gray-700">Real-world best practices</span>
-                  </div>
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      </div>
+                      <span className="text-gray-700">Real-world best practices</span>
                     </div>
-                    <span className="text-gray-700">Interactive learning experience</span>
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0 w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                        <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+                      </div>
+                      <span className="text-gray-700">Interactive learning experience</span>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>

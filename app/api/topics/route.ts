@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       color: topicData.color || 'bg-blue-500',
       difficulty: topicData.difficulty || 'Beginner',
       services: topicData.services || [],
+      learningObjectives: topicData.learningObjectives || [],
       serviceCount: topicData.services?.length || 0,
       tutorialCount: topicData.tutorialCount || 0,
       tutorials: topicData.tutorials || []
@@ -93,6 +94,7 @@ export async function PUT(request: NextRequest) {
       color: topicData.color || existingTopic.color,
       difficulty: topicData.difficulty || existingTopic.difficulty,
       services: topicData.services || existingTopic.services,
+      learningObjectives: topicData.learningObjectives || existingTopic.learningObjectives,
       serviceCount: topicData.services?.length || existingTopic.serviceCount
     };
 
