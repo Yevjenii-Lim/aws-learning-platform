@@ -241,6 +241,24 @@ export async function getFlashcardById(id: string): Promise<Flashcard | null> {
   return result.Item as Flashcard || null;
 }
 
+export async function putFlashcard(flashcard: Flashcard): Promise<void> {
+  const { PutCommand } = await import('@aws-sdk/lib-dynamodb');
+  
+  await dynamoDB.send(new PutCommand({
+    TableName: FLASHCARDS_TABLE,
+    Item: flashcard
+  }));
+}
+
+export async function deleteFlashcard(id: string): Promise<void> {
+  const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
+  
+  await dynamoDB.send(new DeleteCommand({
+    TableName: FLASHCARDS_TABLE,
+    Key: { id }
+  }));
+}
+
 // Utility functions for quiz questions
 export async function getAllQuizQuestions(): Promise<QuizQuestion[]> {
   const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
@@ -274,6 +292,24 @@ export async function getTopicById(id: string): Promise<LearningTopic | null> {
   return result.Item as LearningTopic || null;
 }
 
+export async function putTopic(topic: LearningTopic): Promise<void> {
+  const { PutCommand } = await import('@aws-sdk/lib-dynamodb');
+  
+  await dynamoDB.send(new PutCommand({
+    TableName: TOPICS_TABLE,
+    Item: topic
+  }));
+}
+
+export async function deleteTopic(id: string): Promise<void> {
+  const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
+  
+  await dynamoDB.send(new DeleteCommand({
+    TableName: TOPICS_TABLE,
+    Key: { id }
+  }));
+}
+
 export async function getQuizQuestionsByCategory(category: string): Promise<QuizQuestion[]> {
   const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
   
@@ -297,4 +333,22 @@ export async function getQuizQuestionById(id: string): Promise<QuizQuestion | nu
   }));
   
   return result.Item as QuizQuestion || null;
+}
+
+export async function putQuizQuestion(question: QuizQuestion): Promise<void> {
+  const { PutCommand } = await import('@aws-sdk/lib-dynamodb');
+  
+  await dynamoDB.send(new PutCommand({
+    TableName: QUIZ_TABLE,
+    Item: question
+  }));
+}
+
+export async function deleteQuizQuestion(id: string): Promise<void> {
+  const { DeleteCommand } = await import('@aws-sdk/lib-dynamodb');
+  
+  await dynamoDB.send(new DeleteCommand({
+    TableName: QUIZ_TABLE,
+    Key: { id }
+  }));
 } 

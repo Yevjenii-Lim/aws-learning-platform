@@ -198,8 +198,8 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                     onClick={() => setCurrentStep(index)}
                     className={`w-full text-left p-3 rounded-lg transition-colors ${
                       index === currentStep
-                        ? 'bg-aws-orange text-white'
-                        : 'hover:bg-gray-50 text-gray-700'
+                        ? 'bg-orange-100 text-orange-800 border border-orange-200'
+                        : 'hover:bg-gray-50 text-gray-700 bg-gray-25'
                     }`}
                   >
                     <div className="flex items-center">

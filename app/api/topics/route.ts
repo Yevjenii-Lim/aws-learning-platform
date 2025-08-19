@@ -1,44 +1,148 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllTopics } from '../../../lib/dynamodb';
+import { getAllTopics, getTopicById, putTopic, deleteTopic } from '../../../lib/dynamodb';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
-    // Debug environment variables
-    console.log('Environment check:');
-    console.log('NODE_ENV:', process.env.NODE_ENV);
-    console.log('AWS_REGION:', process.env.AWS_REGION);
-    console.log('REGION:', process.env.REGION);
-    console.log('AWS_LAMBDA_FUNCTION_NAME:', process.env.AWS_LAMBDA_FUNCTION_NAME);
-    console.log('AWS_EXECUTION_ENV:', process.env.AWS_EXECUTION_ENV);
-    console.log('ACCESS_KEY_ID exists:', !!process.env.ACCESS_KEY_ID);
-    console.log('SECRET_ACCESS_KEY exists:', !!process.env.SECRET_ACCESS_KEY);
-    
-    // Get all topics from the topics table
     const topics = await getAllTopics();
+    return NextResponse.json({ success: true, data: topics });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const topicData = await request.json();
+    
+    // Validate required fields
+    if (!topicData.name || !topicData.description) {
+      return NextResponse.json(
+        { success: false, error: 'Name and description are required' },
+        { status: 400 }
+      );
+    }
+
+    // Generate ID if not provided
+    if (!topicData.id) {
+      topicData.id = `topic-${Date.now()}`;
+    }
+
+    // Set default values
+    const topic = {
+      id: topicData.id,
+      name: topicData.name,
+      description: topicData.description,
+      icon: topicData.icon || '📚',
+      color: topicData.color || 'bg-blue-500',
+      difficulty: topicData.difficulty || 'Beginner',
+      services: topicData.services || [],
+      serviceCount: topicData.services?.length || 0,
+      tutorialCount: topicData.tutorialCount || 0,
+      tutorials: topicData.tutorials || []
+    };
+
+    await putTopic(topic);
     
     return NextResponse.json({ 
       success: true, 
-      data: topics 
+      message: 'Topic created successfully',
+      data: topic 
     });
   } catch (error) {
-    console.error('Topics API Error:', error);
-    
-    // Return more specific error information
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    const errorDetails = {
-      message: errorMessage,
-      name: error instanceof Error ? error.name : 'Unknown',
-      stack: error instanceof Error ? error.stack : undefined
-    };
-    
+    console.error('API Error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Internal server error',
-        details: errorDetails
-      },
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const topicData = await request.json();
+    
+    // Validate required fields
+    if (!topicData.id || !topicData.name || !topicData.description) {
+      return NextResponse.json(
+        { success: false, error: 'ID, name and description are required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if topic exists
+    const existingTopic = await getTopicById(topicData.id);
+    if (!existingTopic) {
+      return NextResponse.json(
+        { success: false, error: 'Topic not found' },
+        { status: 404 }
+      );
+    }
+
+    // Update topic data
+    const updatedTopic = {
+      ...existingTopic,
+      name: topicData.name,
+      description: topicData.description,
+      icon: topicData.icon || existingTopic.icon,
+      color: topicData.color || existingTopic.color,
+      difficulty: topicData.difficulty || existingTopic.difficulty,
+      services: topicData.services || existingTopic.services,
+      serviceCount: topicData.services?.length || existingTopic.serviceCount
+    };
+
+    await putTopic(updatedTopic);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Topic updated successfully',
+      data: updatedTopic 
+    });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = request.nextUrl;
+    const topicId = searchParams.get('id');
+    
+    if (!topicId) {
+      return NextResponse.json(
+        { success: false, error: 'Topic ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Check if topic exists
+    const existingTopic = await getTopicById(topicId);
+    if (!existingTopic) {
+      return NextResponse.json(
+        { success: false, error: 'Topic not found' },
+        { status: 404 }
+      );
+    }
+
+    await deleteTopic(topicId);
+    
+    return NextResponse.json({ 
+      success: true, 
+      message: 'Topic deleted successfully' 
+    });
+  } catch (error) {
+    console.error('API Error:', error);
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

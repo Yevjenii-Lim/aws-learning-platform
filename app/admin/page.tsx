@@ -5,6 +5,8 @@ import { Settings, BookOpen, FileText, CreditCard, HelpCircle, Plus, Edit, Trash
 import Link from 'next/link';
 import TutorialForm from './components/TutorialForm';
 import FlashcardForm from './components/FlashcardForm';
+import TopicForm from './components/TopicForm';
+import QuizForm from './components/QuizForm';
 import { awsServices } from '../../data/aws-services';
 
 export default function AdminPage() {
@@ -17,6 +19,10 @@ export default function AdminPage() {
   const [editingTutorial, setEditingTutorial] = useState<any>(null);
   const [showFlashcardForm, setShowFlashcardForm] = useState(false);
   const [editingFlashcard, setEditingFlashcard] = useState<any>(null);
+  const [showTopicForm, setShowTopicForm] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<any>(null);
+  const [showQuizForm, setShowQuizForm] = useState(false);
+  const [editingQuiz, setEditingQuiz] = useState<any>(null);
 
   // Real data from AWS DynamoDB
   const [topics, setTopics] = useState<any[]>([]);
@@ -86,12 +92,18 @@ export default function AdminPage() {
   // Removed password authentication
 
   const handleAdd = (type: string) => {
-    if (type === 'tutorials') {
+    if (type === 'topics') {
+      setShowTopicForm(true);
+      setEditingTopic(null);
+    } else if (type === 'tutorials') {
       setShowTutorialForm(true);
       setEditingTutorial(null);
     } else if (type === 'flashcards') {
       setShowFlashcardForm(true);
       setEditingFlashcard(null);
+    } else if (type === 'quiz') {
+      setShowQuizForm(true);
+      setEditingQuiz(null);
     } else {
       setIsAdding(true);
       setEditingItem(null);
@@ -99,12 +111,18 @@ export default function AdminPage() {
   };
 
   const handleEdit = (item: any, type: string) => {
-    if (type === 'tutorials') {
+    if (type === 'topics') {
+      setShowTopicForm(true);
+      setEditingTopic(item);
+    } else if (type === 'tutorials') {
       setShowTutorialForm(true);
       setEditingTutorial(item);
     } else if (type === 'flashcards') {
       setShowFlashcardForm(true);
       setEditingFlashcard(item);
+    } else if (type === 'quiz') {
+      setShowQuizForm(true);
+      setEditingQuiz(item);
     } else {
       setEditingItem({ ...item, type });
       setIsAdding(false);
@@ -151,20 +169,44 @@ export default function AdminPage() {
           } else {
             alert('Error deleting flashcard: ' + result.error);
           }
+        } else if (type === 'topics') {
+          // Call the API to delete topic
+          const response = await fetch(`/api/topics?id=${id}`, {
+            method: 'DELETE',
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            // Refresh data to get the updated state
+            await fetchAllData();
+            alert('Topic deleted successfully');
+          } else {
+            alert('Error deleting topic: ' + result.error);
+          }
+        } else if (type === 'quiz') {
+          // Call the API to delete quiz question
+          const response = await fetch(`/api/quiz?id=${id}`, {
+            method: 'DELETE',
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            // Refresh data to get the updated state
+            await fetchAllData();
+            alert('Quiz question deleted successfully');
+          } else {
+            alert('Error deleting quiz question: ' + result.error);
+          }
         } else {
           // TODO: Implement actual delete API calls for other types
           console.log(`Deleting ${type} with id: ${id}`);
           
           // For now, just remove from local state
           switch (type) {
-            case 'topics':
-              setTopics(topics.filter((t: any) => t.id !== id));
-              break;
             case 'flashcards':
               setFlashcards(flashcards.filter((f: any) => f.id !== id));
-              break;
-            case 'quiz':
-              setQuizQuestions(quizQuestions.filter((q: any) => q.id !== id));
               break;
           }
         }
@@ -303,6 +345,80 @@ export default function AdminPage() {
   const handleFlashcardCancel = () => {
     setShowFlashcardForm(false);
     setEditingFlashcard(null);
+  };
+
+  const handleTopicSave = async (topic: any) => {
+    try {
+      console.log('Saving topic:', topic);
+      
+      const method = editingTopic ? 'PUT' : 'POST';
+      const response = await fetch('/api/topics', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(topic),
+      });
+
+      console.log('API response status:', response.status);
+      const result = await response.json();
+      console.log('API response:', result);
+      
+      if (result.success) {
+        // Refresh data to get the updated state
+        await fetchAllData();
+        setShowTopicForm(false);
+        setEditingTopic(null);
+        alert(result.message);
+      } else {
+        alert('Error saving topic: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error saving topic:', error);
+      alert('Error saving topic');
+    }
+  };
+
+  const handleTopicCancel = () => {
+    setShowTopicForm(false);
+    setEditingTopic(null);
+  };
+
+  const handleQuizSave = async (quiz: any) => {
+    try {
+      console.log('Saving quiz:', quiz);
+      
+      const method = editingQuiz ? 'PUT' : 'POST';
+      const response = await fetch('/api/quiz', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(quiz),
+      });
+
+      console.log('API response status:', response.status);
+      const result = await response.json();
+      console.log('API response:', result);
+      
+      if (result.success) {
+        // Refresh data to get the updated state
+        await fetchAllData();
+        setShowQuizForm(false);
+        setEditingQuiz(null);
+        alert(result.message);
+      } else {
+        alert('Error saving quiz question: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error saving quiz question:', error);
+      alert('Error saving quiz question');
+    }
+  };
+
+  const handleQuizCancel = () => {
+    setShowQuizForm(false);
+    setEditingQuiz(null);
   };
 
   // Removed authentication check - admin panel is now directly accessible
@@ -674,6 +790,24 @@ export default function AdminPage() {
           flashcard={editingFlashcard}
           onSave={handleFlashcardSave}
           onCancel={handleFlashcardCancel}
+        />
+      )}
+
+      {/* Topic Form Modal */}
+      {showTopicForm && (
+        <TopicForm
+          topic={editingTopic}
+          onSave={handleTopicSave}
+          onCancel={handleTopicCancel}
+        />
+      )}
+
+      {/* Quiz Form Modal */}
+      {showQuizForm && (
+        <QuizForm
+          quiz={editingQuiz}
+          onSave={handleQuizSave}
+          onCancel={handleQuizCancel}
         />
       )}
     </div>
