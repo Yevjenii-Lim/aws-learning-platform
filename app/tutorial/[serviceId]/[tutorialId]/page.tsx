@@ -47,7 +47,6 @@ interface TutorialPageProps {
 
 export default function TutorialPage({ params }: TutorialPageProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [service, setService] = useState<AWSService | null>(null);
   const [tutorial, setTutorial] = useState<AWSTutorial | null>(null);
   const [loading, setLoading] = useState(true);
@@ -142,13 +141,6 @@ export default function TutorialPage({ params }: TutorialPageProps) {
   }
 
   const currentStepData = tutorial.steps[currentStep];
-  const progress = (completedSteps.length / tutorial.steps.length) * 100;
-
-  const markStepComplete = () => {
-    if (!completedSteps.includes(currentStep)) {
-      setCompletedSteps([...completedSteps, currentStep]);
-    }
-  };
 
   const nextStep = () => {
     if (currentStep < tutorial.steps.length - 1) {
@@ -160,12 +152,6 @@ export default function TutorialPage({ params }: TutorialPageProps) {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
     }
-  };
-
-  const getStepStatus = (stepIndex: number) => {
-    if (completedSteps.includes(stepIndex)) return 'completed';
-    if (stepIndex === currentStep) return 'active';
-    return 'pending';
   };
 
   return (
@@ -199,27 +185,11 @@ export default function TutorialPage({ params }: TutorialPageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar - Progress */}
+          {/* Sidebar - Steps */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h3 className="font-semibold text-gray-900 mb-4">Progress</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Steps</h3>
               
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex justify-between text-sm text-gray-700 mb-2">
-                  <span>{completedSteps.length} of {tutorial.steps.length} completed</span>
-                  <span>{Math.round(progress)}%</span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <motion.div
-                    className="bg-aws-orange h-2 rounded-full"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${progress}%` }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-              </div>
-
               {/* Steps List */}
               <div className="space-y-3">
                 {tutorial.steps.map((step, index) => (
@@ -233,15 +203,8 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                     }`}
                   >
                     <div className="flex items-center">
-                      <div className={`step-indicator ${
-                        getStepStatus(index) === 'completed' ? 'step-completed' :
-                        getStepStatus(index) === 'active' ? 'step-active' : 'step-pending'
-                      }`}>
-                        {getStepStatus(index) === 'completed' ? (
-                          <CheckCircle className="h-4 w-4" />
-                        ) : (
-                          <span className="text-gray-700">{index + 1}</span>
-                        )}
+                      <div className="step-indicator">
+                        <span className="text-gray-700">{index + 1}</span>
                       </div>
                       <span className="ml-3 text-sm font-medium text-gray-700">{step.title}</span>
                     </div>
@@ -277,32 +240,14 @@ export default function TutorialPage({ params }: TutorialPageProps) {
               >
                 {/* Step Header */}
                 <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <div className={`step-indicator ${
-                        getStepStatus(currentStep) === 'completed' ? 'step-completed' : 'step-active'
-                      }`}>
-                        {getStepStatus(currentStep) === 'completed' ? (
-                          <CheckCircle className="h-5 w-5" />
-                        ) : (
-                          <span className="text-lg">{currentStep + 1}</span>
-                        )}
-                      </div>
-                      <div className="ml-4">
-                        <h2 className="text-xl font-semibold text-gray-900">{currentStepData.title}</h2>
-                        <p className="text-gray-600">{currentStepData.description}</p>
-                      </div>
+                  <div className="flex items-center mb-4">
+                    <div className="step-indicator">
+                      <span className="text-lg">{currentStep + 1}</span>
                     </div>
-                    <button
-                      onClick={markStepComplete}
-                      className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        completedSteps.includes(currentStep)
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-aws-orange text-white hover:bg-orange-600'
-                      }`}
-                    >
-                      {completedSteps.includes(currentStep) ? 'Completed' : 'Mark Complete'}
-                    </button>
+                    <div className="ml-4">
+                      <h2 className="text-xl font-semibold text-gray-900">{currentStepData.title}</h2>
+                      <p className="text-gray-600">{currentStepData.description}</p>
+                    </div>
                   </div>
                 </div>
 
