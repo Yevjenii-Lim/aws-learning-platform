@@ -108,6 +108,7 @@ export interface QuizQuestion {
   correctAnswer: number;
   explanation: string;
   category: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
   tags: string[];
 }
 
