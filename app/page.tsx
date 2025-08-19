@@ -80,15 +80,7 @@ export default function HomePage() {
             )
           };
           
-          // Debug logging for monitoring topic
-          if (topic.id === 'monitoring') {
-            console.log('Monitoring topic debug:', {
-              originalServices: topic.services,
-              tutorials: topic.tutorials?.map((t: any) => ({ title: t.title, services: t.services })),
-              aggregatedServices: Array.from(allServices),
-              finalServiceNames: transformedTopic.serviceNames
-            });
-          }
+
           
           return transformedTopic;
         });
@@ -305,7 +297,7 @@ export default function HomePage() {
         <div className="bg-white rounded-lg shadow-sm p-8 mb-16">
           <h3 className="text-2xl font-bold text-gray-900 mb-6">Quick Access</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <Link href="/tutorial/vpc/create-vpc" className="group">
+            <Link href="/tutorial/networking/create-vpc" className="group">
               <div className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-aws-orange hover:bg-orange-50 transition-all duration-300">
                 <div className="bg-blue-500 p-3 rounded-lg mr-4 text-white">
                   <Globe className="h-6 w-6" />
@@ -318,7 +310,7 @@ export default function HomePage() {
               </div>
             </Link>
             
-            <Link href="/tutorial/ec2/launch-instance" className="group">
+            <Link href="/tutorial/compute/launch-instance" className="group">
               <div className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-aws-orange hover:bg-orange-50 transition-all duration-300">
                 <div className="bg-green-500 p-3 rounded-lg mr-4 text-white">
                   <Server className="h-6 w-6" />
@@ -331,7 +323,7 @@ export default function HomePage() {
               </div>
             </Link>
             
-            <Link href="/tutorial/s3/create-bucket" className="group">
+            <Link href="/tutorial/storage/create-bucket" className="group">
               <div className="flex items-center p-4 border border-gray-200 rounded-lg hover:border-aws-orange hover:bg-orange-50 transition-all duration-300">
                 <div className="bg-orange-500 p-3 rounded-lg mr-4 text-white">
                   <HardDrive className="h-6 w-6" />
