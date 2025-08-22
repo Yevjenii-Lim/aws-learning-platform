@@ -11,7 +11,9 @@ import {
   Award,
   Play,
   CheckCircle,
-  BarChart3
+  BarChart3,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface UserStats {
@@ -49,6 +51,7 @@ export default function UserDashboard() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAllActivities, setShowAllActivities] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -202,7 +205,9 @@ export default function UserDashboard() {
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h3>
         {progress?.recentActivity && progress.recentActivity.length > 0 ? (
           <div className="space-y-4">
-            {progress.recentActivity.slice(0, 5).map((activity, index) => (
+            {progress.recentActivity
+              .slice(0, showAllActivities ? progress.recentActivity.length : 5)
+              .map((activity, index) => (
               <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                 <div className="flex-shrink-0">
                   {activity.type === 'tutorial' && (
@@ -238,9 +243,24 @@ export default function UserDashboard() {
               </div>
             ))}
             {progress.recentActivity.length > 5 && (
-              <p className="text-sm text-gray-500 text-center">
-                And {progress.recentActivity.length - 5} more activities...
-              </p>
+              <div className="text-center">
+                <button
+                  onClick={() => setShowAllActivities(!showAllActivities)}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-aws-orange bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+                >
+                  {showAllActivities ? (
+                    <>
+                      <ChevronUp className="h-4 w-4 mr-2" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="h-4 w-4 mr-2" />
+                      Show All {progress.recentActivity.length} Activities
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
         ) : progress?.lastActivity ? (
