@@ -24,7 +24,12 @@ export interface User {
     };
   };
   progress: {
-    completedTutorials: string[];
+    completedTutorials: Array<{
+      tutorialId: string;
+      title: string;
+      estimatedTime: string;
+      completedAt: string;
+    }>;
     quizScores: Record<string, number>;
     totalTimeSpent: number;
     lastActivity: string | null;
@@ -172,16 +177,31 @@ export async function getUserById(id: string): Promise<UserWithoutPassword | nul
 
 // Helper function to parse estimated time string to minutes
 function parseEstimatedTime(timeString: string): number {
-  const match = timeString.match(/(\d+)\s*(minute|hour|h|m)/i);
-  if (!match) return 0;
+  if (!timeString) return 0;
   
-  const value = parseInt(match[1]);
-  const unit = match[2].toLowerCase();
+  // Try to match explicit time formats first (e.g., "10 minutes", "2 hours")
+  const timeMatch = timeString.match(/(\d+)\s*(minute|hour|h|m)/i);
+  if (timeMatch) {
+    const value = parseInt(timeMatch[1]);
+    const unit = timeMatch[2].toLowerCase();
+    
+    if (unit === 'hour' || unit === 'h') {
+      return value * 60;
+    } else if (unit === 'minute' || unit === 'm') {
+      return value;
+    }
+  }
   
-  if (unit === 'hour' || unit === 'h') {
-    return value * 60;
-  } else if (unit === 'minute' || unit === 'm') {
-    return value;
+  // If no explicit time format, try to parse as just a number (assume minutes)
+  const numberMatch = timeString.match(/^(\d+)$/);
+  if (numberMatch) {
+    return parseInt(numberMatch[1]);
+  }
+  
+  // If still no match, try to extract any number from the string
+  const anyNumberMatch = timeString.match(/(\d+)/);
+  if (anyNumberMatch) {
+    return parseInt(anyNumberMatch[1]);
   }
   
   return 0;
@@ -287,21 +307,23 @@ export async function completeTutorial(
     const currentUser = await getUserById(id);
     const currentRecentActivity = currentUser?.progress?.recentActivity || [];
     const currentCompletedTutorials = currentUser?.progress?.completedTutorials || [];
-    const currentTotalTimeSpent = currentUser?.progress?.totalTimeSpent || 0;
     
-    // Parse estimated time and add to total time spent
-    const timeToAdd = estimatedTime ? parseEstimatedTime(estimatedTime) : 0;
-    const newTotalTimeSpent = currentTotalTimeSpent + timeToAdd;
+    // Create detailed tutorial completion record
+    const tutorialCompletion = {
+      tutorialId,
+      title: tutorialTitle || `Tutorial ${tutorialId}`,
+      estimatedTime: estimatedTime || '0 minutes',
+      completedAt: now
+    };
     
     await client.send(new UpdateItemCommand({
       TableName: TABLE_NAME,
       Key: marshall({ email, id }),
-      UpdateExpression: 'SET progress.lastActivity = :lastActivity, progress.recentActivity = :recentActivity, progress.completedTutorials = :completedTutorials, progress.totalTimeSpent = :totalTimeSpent',
+      UpdateExpression: 'SET progress.lastActivity = :lastActivity, progress.recentActivity = :recentActivity, progress.completedTutorials = :completedTutorials',
       ExpressionAttributeValues: marshall({
         ':lastActivity': now,
         ':recentActivity': [activityItem, ...currentRecentActivity],
-        ':completedTutorials': [...currentCompletedTutorials, tutorialId],
-        ':totalTimeSpent': newTotalTimeSpent
+        ':completedTutorials': [...currentCompletedTutorials, tutorialCompletion]
       })
     }));
     return true;
@@ -451,11 +473,30 @@ export async function getUserStats(email: string, id: string): Promise<{
       ? quizScores.reduce((sum, score) => sum + score, 0) / quizScores.length 
       : 0;
 
+    // Calculate total time spent dynamically from completed tutorials
+    let totalTimeSpent = 0;
+    if (Array.isArray(progress.completedTutorials)) {
+      totalTimeSpent = progress.completedTutorials.reduce((total, tutorial) => {
+        if (typeof tutorial === 'string') {
+          // Handle legacy format where completedTutorials was just an array of strings
+          return total;
+        } else {
+          // New format with detailed tutorial information
+          return total + (tutorial.estimatedTime ? parseEstimatedTime(tutorial.estimatedTime) : 0);
+        }
+      }, 0);
+    }
+    
+    // If no time calculated from tutorials, use stored value as fallback
+    if (totalTimeSpent === 0 && progress.totalTimeSpent > 0) {
+      totalTimeSpent = progress.totalTimeSpent;
+    }
+
     return {
-      totalTutorials: progress.completedTutorials.length,
+      totalTutorials: Array.isArray(progress.completedTutorials) ? progress.completedTutorials.length : 0,
       totalQuizScores: quizScores.length,
       averageQuizScore: Math.round(averageQuizScore * 100) / 100,
-      totalTimeSpent: progress.totalTimeSpent,
+      totalTimeSpent,
       learningStreak: progress.learningStreak,
       achievements: progress.achievements
     };

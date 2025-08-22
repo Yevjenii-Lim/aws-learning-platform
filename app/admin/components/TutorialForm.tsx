@@ -307,9 +307,12 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                 value={formData.estimatedTime}
                 onChange={(e) => handleInputChange('estimatedTime', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-aws-orange focus:border-transparent text-gray-900"
-                placeholder="e.g., 15 minutes"
+                placeholder="e.g., 15 minutes, 2 hours, 30, or 45"
                 required
               />
+              <p className="mt-1 text-sm text-gray-500">
+                Accepts formats: "15 minutes", "2 hours", "30" (assumes minutes), "1h", "30m"
+              </p>
             </div>
           </div>
 

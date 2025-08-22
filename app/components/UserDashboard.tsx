@@ -24,7 +24,12 @@ interface UserStats {
 }
 
 interface UserProgress {
-  completedTutorials: string[];
+  completedTutorials: Array<{
+    tutorialId: string;
+    title: string;
+    estimatedTime: string;
+    completedAt: string;
+  }> | string[]; // Support both new and legacy formats
   quizScores: Record<string, number>;
   totalTimeSpent: number;
   lastActivity: string | null;
