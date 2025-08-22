@@ -97,7 +97,7 @@ export default function UserDashboard() {
     return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
   };
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return 'Never';
     const date = new Date(dateString);
     const now = new Date();
