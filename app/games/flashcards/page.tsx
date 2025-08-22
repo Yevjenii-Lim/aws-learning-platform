@@ -42,6 +42,14 @@ interface Topic {
 
 const topics: Topic[] = [
   {
+    id: 'all',
+    name: 'All Flashcards',
+    description: 'Practice with all flashcards from all topics',
+    icon: <Trophy className="h-8 w-8" />,
+    color: 'bg-gradient-to-r from-aws-orange to-orange-600',
+    cardCount: 0
+  },
+  {
     id: 'networking',
     name: 'Networking',
     description: 'Learn about VPC, CloudFront, and network architecture',
@@ -130,7 +138,9 @@ export default function FlashcardsPage() {
           const flashcards = result.data;
           const updatedTopics = topics.map(topic => ({
             ...topic,
-            cardCount: flashcards.filter((card: Flashcard) => card.category === topic.id).length
+            cardCount: topic.id === 'all' 
+              ? flashcards.length 
+              : flashcards.filter((card: Flashcard) => card.category === topic.id).length
           }));
           setTopicsWithCounts(updatedTopics);
         }
@@ -147,7 +157,12 @@ export default function FlashcardsPage() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`/api/flashcards?category=${topicId}`);
+      // For "all" category, fetch all flashcards without category filter
+      const url = topicId === 'all' 
+        ? '/api/flashcards' 
+        : `/api/flashcards?category=${topicId}`;
+      
+      const response = await fetch(url);
       const result = await response.json();
       
       if (result.success && result.data) {
@@ -205,6 +220,10 @@ export default function FlashcardsPage() {
     try {
       setIsCompleting(true);
       
+      const topicName = selectedTopic === 'all' 
+        ? 'All Flashcards' 
+        : topicsWithCounts.find(t => t.id === selectedTopic)?.name || selectedTopic;
+      
       const response = await fetch('/api/users/progress', {
         method: 'POST',
         headers: {
@@ -214,7 +233,7 @@ export default function FlashcardsPage() {
           action: 'complete_flashcards',
           data: {
             topicId: selectedTopic,
-            topicName: selectedTopicData?.name,
+            topicName: topicName,
             cardCount: shuffledCards.length
           }
         }),
@@ -274,7 +293,11 @@ export default function FlashcardsPage() {
                 key={topic.id}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 cursor-pointer hover:shadow-md transition-shadow"
+                className={`rounded-lg shadow-sm border p-6 cursor-pointer hover:shadow-md transition-shadow ${
+                  topic.id === 'all' 
+                    ? 'bg-gradient-to-r from-aws-orange to-orange-600 text-white border-orange-500' 
+                    : 'bg-white border-gray-200'
+                }`}
                 onClick={() => selectTopic(topic.id)}
               >
                 <div className="flex items-center mb-4">
@@ -282,12 +305,20 @@ export default function FlashcardsPage() {
                     {topic.icon}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{topic.name}</h3>
-                    <p className="text-sm text-gray-500">{topic.cardCount} cards</p>
+                    <h3 className={`text-lg font-semibold ${topic.id === 'all' ? 'text-white' : 'text-gray-900'}`}>
+                      {topic.name}
+                    </h3>
+                    <p className={`text-sm ${topic.id === 'all' ? 'text-orange-100' : 'text-gray-500'}`}>
+                      {topic.cardCount} cards
+                    </p>
                   </div>
                 </div>
-                <p className="text-gray-600 text-sm">{topic.description}</p>
-                <div className="mt-4 flex items-center text-aws-orange text-sm font-medium">
+                <p className={`text-sm ${topic.id === 'all' ? 'text-orange-100' : 'text-gray-600'}`}>
+                  {topic.description}
+                </p>
+                <div className={`mt-4 flex items-center text-sm font-medium ${
+                  topic.id === 'all' ? 'text-white' : 'text-aws-orange'
+                }`}>
                   Start Learning
                   <ChevronRight className="h-4 w-4 ml-1" />
                 </div>
