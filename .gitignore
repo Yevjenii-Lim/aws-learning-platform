@@ -39,3 +39,7 @@ next-env.d.ts
 # AWS CLI installer
 *.pkg env.local
 AWSCLIV2.pkg
+
+# Sensitive scripts with credentials
+scripts/migrate-recent-activity.js
+scripts/test-complete-tutorial.js
