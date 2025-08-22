@@ -17,7 +17,7 @@ import {
   Copy,
   ExternalLink
 } from 'lucide-react';
-import { awsServices, AWSService, AWSTutorial, AWSStep } from '../../../../../data/aws-services';
+import { AWSService, AWSTutorial, AWSStep } from '../../../../../lib/dynamodb';
 import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -38,14 +38,27 @@ export default function CLIPage({ params }: CLIPageProps) {
   const [tutorial, setTutorial] = useState<AWSTutorial | null>(null);
 
   useEffect(() => {
-    const foundService = awsServices.find(s => s.id === params.serviceId);
-    if (foundService) {
-      setService(foundService);
-      const foundTutorial = foundService.tutorials.find(t => t.id === params.tutorialId);
-      if (foundTutorial) {
-        setTutorial(foundTutorial);
+    const fetchTutorialData = async () => {
+      try {
+        // Fetch service data
+        const serviceResponse = await fetch(`/api/services/${params.serviceId}`);
+        const serviceData = await serviceResponse.json();
+        if (serviceData.success) {
+          setService(serviceData.data);
+        }
+
+        // Fetch tutorial data
+        const tutorialResponse = await fetch(`/api/services/${params.serviceId}/tutorials/${params.tutorialId}`);
+        const tutorialData = await tutorialResponse.json();
+        if (tutorialData.success) {
+          setTutorial(tutorialData.data);
+        }
+      } catch (error) {
+        console.error('Error fetching tutorial data:', error);
       }
-    }
+    };
+
+    fetchTutorialData();
   }, [params.serviceId, params.tutorialId]);
 
   if (!service || !tutorial) {
@@ -258,7 +271,7 @@ export default function CLIPage({ params }: CLIPageProps) {
                     </h3>
                     
                     <div className="space-y-4">
-                      {currentStepData.cliCommands.map((command, index) => (
+                      {currentStepData.cliCommands.map((command: string, index: number) => (
                         <div key={index} className="bg-gray-900 rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm text-gray-400">Command {index + 1}</span>
@@ -303,7 +316,7 @@ export default function CLIPage({ params }: CLIPageProps) {
                           These CLI commands perform the same actions as the console instructions but through the command line interface.
                         </p>
                         <ul className="space-y-1 text-sm text-blue-800">
-                          {currentStepData.tips.map((tip, index) => (
+                          {currentStepData.tips.map((tip: string, index: number) => (
                             <li key={index}>• {tip}</li>
                           ))}
                         </ul>

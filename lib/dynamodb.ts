@@ -43,12 +43,23 @@ if (isAWSEnvironment) {
 export const dynamoDB = DynamoDBDocumentClient.from(client);
 
 // Table names
-export const LESSONS_TABLE = 'aws-learning-lessons';
+export const SERVICES_TABLE = process.env.AWS_DYNAMODB_SERVICES_TABLE || 'aws-learning-services';
+export const TUTORIALS_TABLE = process.env.AWS_DYNAMODB_TUTORIALS_TABLE || 'aws-learning-tutorials';
 export const FLASHCARDS_TABLE = 'aws-learning-flashcards';
 export const QUIZ_TABLE = 'aws-learning-quiz';
 export const TOPICS_TABLE = 'aws-learning-topics';
 
 // Interfaces for lessons (existing)
+export interface AWSStep {
+  id: number;
+  title: string;
+  description: string;
+  consoleInstructions: string[];
+  cliCommands: string[];
+  screenshot?: string;
+  tips: string[];
+}
+
 export interface AWSService {
   id: string;
   name: string;
@@ -66,6 +77,7 @@ export interface AWSTutorial {
   estimatedTime: string;
   category: string;
   steps: any[];
+  prerequisites: string[];
   learningObjectives: string[];
 }
 
@@ -119,12 +131,24 @@ export async function createTables() {
   
   const tables = [
     {
-      TableName: LESSONS_TABLE,
+      TableName: SERVICES_TABLE,
       KeySchema: [
         { AttributeName: 'id', KeyType: 'HASH' as const }
       ],
       AttributeDefinitions: [
         { AttributeName: 'id', AttributeType: 'S' as const }
+      ],
+      BillingMode: 'PAY_PER_REQUEST' as const
+    },
+    {
+      TableName: TUTORIALS_TABLE,
+      KeySchema: [
+        { AttributeName: 'PK', KeyType: 'HASH' as const },
+        { AttributeName: 'SK', KeyType: 'RANGE' as const }
+      ],
+      AttributeDefinitions: [
+        { AttributeName: 'PK', AttributeType: 'S' as const },
+        { AttributeName: 'SK', AttributeType: 'S' as const }
       ],
       BillingMode: 'PAY_PER_REQUEST' as const
     },
@@ -174,12 +198,12 @@ export async function createTables() {
   }
 }
 
-// Utility functions for lessons (existing)
+// Utility functions for services and tutorials
 export async function getAllServices(): Promise<AWSService[]> {
   const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
   
   const result = await dynamoDB.send(new ScanCommand({
-    TableName: LESSONS_TABLE,
+    TableName: SERVICES_TABLE,
   }));
   
   return result.Items as AWSService[] || [];
@@ -189,7 +213,7 @@ export async function getServiceById(serviceId: string): Promise<AWSService | nu
   const { GetCommand } = await import('@aws-sdk/lib-dynamodb');
   
   const result = await dynamoDB.send(new GetCommand({
-    TableName: LESSONS_TABLE,
+    TableName: SERVICES_TABLE,
     Key: { id: serviceId }
   }));
   
@@ -200,8 +224,11 @@ export async function getTutorialById(serviceId: string, tutorialId: string): Pr
   const { GetCommand } = await import('@aws-sdk/lib-dynamodb');
   
   const result = await dynamoDB.send(new GetCommand({
-    TableName: LESSONS_TABLE,
-    Key: { id: `${serviceId}-${tutorialId}` }
+    TableName: TUTORIALS_TABLE,
+    Key: { 
+      PK: `SERVICE#${serviceId}`,
+      SK: `TUTORIAL#${tutorialId}`
+    }
   }));
   
   return result.Item as AWSTutorial || null;

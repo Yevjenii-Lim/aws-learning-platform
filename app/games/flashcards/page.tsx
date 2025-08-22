@@ -17,9 +17,11 @@ import {
   Database,
   Shield,
   Monitor,
-  HardDrive
+  HardDrive,
+  Trophy
 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/app/contexts/AuthContext';
 
 interface Flashcard {
   id: string;
@@ -106,6 +108,7 @@ const topics: Topic[] = [
 ];
 
 export default function FlashcardsPage() {
+  const { user } = useAuth();
   const [selectedTopic, setSelectedTopic] = useState<string | null>(null);
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -113,6 +116,8 @@ export default function FlashcardsPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [topicsWithCounts, setTopicsWithCounts] = useState<Topic[]>(topics);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   // Fetch card counts for topics
   useEffect(() => {
@@ -192,6 +197,41 @@ export default function FlashcardsPage() {
 
   const flipCard = () => {
     setIsFlipped(!isFlipped);
+  };
+
+  const markAsCompleted = async () => {
+    if (!user || !selectedTopic) return;
+    
+    try {
+      setIsCompleting(true);
+      
+      const response = await fetch('/api/users/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'complete_flashcards',
+          data: {
+            topicId: selectedTopic,
+            topicName: selectedTopicData?.name,
+            cardCount: shuffledCards.length
+          }
+        }),
+      });
+
+      if (response.ok) {
+        setIsCompleted(true);
+        // Show success message for 3 seconds
+        setTimeout(() => setIsCompleted(false), 3000);
+      } else {
+        console.error('Failed to mark flashcards as completed');
+      }
+    } catch (error) {
+      console.error('Error marking flashcards as completed:', error);
+    } finally {
+      setIsCompleting(false);
+    }
   };
 
   // Topic Selection Screen
@@ -445,7 +485,7 @@ export default function FlashcardsPage() {
         {/* Removed Answer Tracking section */}
 
         {/* Shuffle Button */}
-        <div className="flex justify-center">
+        <div className="flex justify-center mb-4">
           <button
             onClick={shuffleCards}
             className="flex items-center px-6 py-3 rounded-md text-sm font-medium bg-gray-800 text-white hover:bg-gray-700"
@@ -454,6 +494,31 @@ export default function FlashcardsPage() {
             Shuffle Cards
           </button>
         </div>
+
+        {/* Mark as Completed Button - Only show when user is logged in and on last card */}
+        {user && currentCardIndex === shuffledCards.length - 1 && (
+          <div className="flex justify-center">
+            {isCompleted ? (
+              <div className="flex items-center px-6 py-3 rounded-md text-sm font-medium bg-green-100 text-green-800">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Flashcards Completed!
+              </div>
+            ) : (
+              <button
+                onClick={markAsCompleted}
+                disabled={isCompleting}
+                className={`flex items-center px-6 py-3 rounded-md text-sm font-medium transition-colors ${
+                  isCompleting
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-aws-orange text-white hover:bg-aws-orange-dark'
+                }`}
+              >
+                <Trophy className="h-4 w-4 mr-2" />
+                {isCompleting ? 'Marking as Completed...' : 'Mark as Completed'}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -7,7 +7,8 @@ import TutorialForm from './components/TutorialForm';
 import FlashcardForm from './components/FlashcardForm';
 import TopicForm from './components/TopicForm';
 import QuizForm from './components/QuizForm';
-import { awsServices } from '../../data/aws-services';
+import { useAuth } from '../contexts/AuthContext';
+
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('topics');
@@ -23,6 +24,8 @@ export default function AdminPage() {
   const [editingTopic, setEditingTopic] = useState<any>(null);
   const [showQuizForm, setShowQuizForm] = useState(false);
   const [editingQuiz, setEditingQuiz] = useState<any>(null);
+  // Temporarily disabled auth context usage
+  // const { user, isLoading: authLoading } = useAuth();
 
   // Real data from AWS DynamoDB
   const [topics, setTopics] = useState<any[]>([]);
@@ -79,8 +82,20 @@ export default function AdminPage() {
       }
       setTutorials(allTutorials);
       
-      // Set services from the awsServices data
-      setServices(awsServices);
+      // Fetch services from API
+      try {
+        const servicesResponse = await fetch('/api/services');
+        const servicesData = await servicesResponse.json();
+        if (servicesData.success) {
+          setServices(servicesData.data || []);
+        } else {
+          console.error('Error fetching services:', servicesData.error);
+          setServices([]);
+        }
+      } catch (error) {
+        console.error('Error fetching services:', error);
+        setServices([]);
+      }
 
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -421,7 +436,8 @@ export default function AdminPage() {
     setEditingQuiz(null);
   };
 
-  // Removed authentication check - admin panel is now directly accessible
+  // Temporarily disabled authentication for admin access
+  // TODO: Re-enable authentication when ready
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -494,7 +510,7 @@ export default function AdminPage() {
                 placeholder={`Search ${activeTab}...`}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-gray-900 placeholder-gray-500"
               />
             </div>
             <div className="flex items-center space-x-4">

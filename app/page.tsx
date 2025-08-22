@@ -1,9 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, BookOpen, Clock, Target, ChevronRight, Plus, Play, Gamepad2, ArrowRight, Users, Award, Zap, Cloud, Server, HardDrive, Shield, Database, Globe, Lock, Cpu, Settings } from 'lucide-react';
+import { Search, BookOpen, Clock, Target, ChevronRight, Plus, Play, Gamepad2, ArrowRight, Users, Award, Zap, Cloud, Server, HardDrive, Shield, Database, Globe, Lock, Cpu, Settings, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import ClientOnly from './components/ClientOnly';
+import { useAuth } from './contexts/AuthContext';
+import LoginModal from './components/LoginModal';
+import RegisterModal from './components/RegisterModal';
+import UserMenu from './components/UserMenu';
 
 interface LearningTopic {
   id: string;
@@ -23,6 +27,9 @@ export default function HomePage() {
   const [learningTopics, setLearningTopics] = useState<LearningTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     fetchLearningTopics();
@@ -102,6 +109,16 @@ export default function HomePage() {
     topic.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleSwitchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
+
   const getIconComponent = (icon: string) => {
     const iconMap: { [key: string]: any } = {
       '🌐': Globe,
@@ -137,7 +154,6 @@ export default function HomePage() {
                   className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-aws-orange focus:border-transparent text-gray-900"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  style={{ color: 'black' }}
                 />
                 <ClientOnly>
                   {searchTerm && (
@@ -151,6 +167,25 @@ export default function HomePage() {
                 <Gamepad2 className="h-4 w-4 mr-2" />
                 Games
               </Link>
+              {user ? (
+                <UserMenu />
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setIsLoginModalOpen(true)}
+                    className="aws-button flex items-center"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Login
+                  </button>
+                  <button
+                    onClick={() => setIsRegisterModalOpen(true)}
+                    className="px-4 py-2 border border-aws-orange text-aws-orange rounded-lg hover:bg-aws-orange hover:text-white transition-colors"
+                  >
+                    Register
+                  </button>
+                </div>
+              )}
               <Link href="/admin" className="text-gray-600 hover:text-gray-900">
                 <Settings className="h-5 w-5" />
               </Link>
@@ -401,6 +436,18 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      
+      <LoginModal 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+      
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
     </div>
   );
 } 

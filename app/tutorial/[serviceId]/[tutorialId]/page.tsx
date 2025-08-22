@@ -12,8 +12,13 @@ import {
   Clock,
   Target,
   BookOpen,
-  ArrowLeft
+  ArrowLeft,
+  Terminal,
+  Copy,
+  CheckCircle2,
+  Trophy
 } from 'lucide-react';
+import { useAuth } from '@/app/contexts/AuthContext';
 // Types for AWS data
 interface AWSService {
   id: string;
@@ -46,11 +51,16 @@ interface TutorialPageProps {
 }
 
 export default function TutorialPage({ params }: TutorialPageProps) {
-  const [currentStep, setCurrentStep] = useState(0);
+  const { user } = useAuth();
   const [service, setService] = useState<AWSService | null>(null);
   const [tutorial, setTutorial] = useState<AWSTutorial | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'console' | 'cli'>('console');
+  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(false);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchTutorial() {
@@ -101,9 +111,9 @@ export default function TutorialPage({ params }: TutorialPageProps) {
         } else {
           setError('Failed to fetch tutorial data');
         }
-      } catch (err) {
-        console.error('Error fetching tutorial:', err);
-        setError('Failed to load tutorial');
+      } catch (error) {
+        console.error('Error fetching tutorial:', error);
+        setError('Failed to fetch tutorial data');
       } finally {
         setLoading(false);
       }
@@ -112,13 +122,59 @@ export default function TutorialPage({ params }: TutorialPageProps) {
     fetchTutorial();
   }, [params.serviceId, params.tutorialId]);
 
+  const copyToClipboard = async (command: string) => {
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopiedCommand(command);
+      setTimeout(() => setCopiedCommand(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy command:', err);
+    }
+  };
+
+  const markAsCompleted = async () => {
+    if (!user || !tutorial) return;
+    
+    try {
+      setIsCompleting(true);
+      
+      const response = await fetch('/api/users/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'complete_tutorial',
+          data: {
+            tutorialId: tutorial.id,
+            tutorialTitle: tutorial.title,
+            serviceId: params.serviceId,
+            serviceName: service?.name,
+            estimatedTime: tutorial.estimatedTime
+          }
+        }),
+      });
+
+      if (response.ok) {
+        setIsCompleted(true);
+        // Show success message for 3 seconds
+        setTimeout(() => setIsCompleted(false), 3000);
+      } else {
+        console.error('Failed to mark tutorial as completed');
+      }
+    } catch (error) {
+      console.error('Error marking tutorial as completed:', error);
+    } finally {
+      setIsCompleting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <div className="text-6xl mb-4">☁️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading Tutorial</h1>
-          <p className="text-gray-600">Fetching tutorial from AWS DynamoDB...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-aws-orange mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading tutorial...</p>
         </div>
       </div>
     );
@@ -139,20 +195,6 @@ export default function TutorialPage({ params }: TutorialPageProps) {
       </div>
     );
   }
-
-  const currentStepData = tutorial.steps[currentStep];
-
-  const nextStep = () => {
-    if (currentStep < tutorial.steps.length - 1) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-
-  const prevStep = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -185,35 +227,13 @@ export default function TutorialPage({ params }: TutorialPageProps) {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar - Steps */}
+          {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-8">
-              <h3 className="font-semibold text-gray-900 mb-4">Steps</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Tutorial Overview</h3>
               
-              {/* Steps List */}
-              <div className="space-y-3">
-                {tutorial.steps.map((step, index) => (
-                  <button
-                    key={step.id}
-                    onClick={() => setCurrentStep(index)}
-                    className={`w-full text-left p-3 rounded-lg transition-colors ${
-                      index === currentStep
-                        ? 'bg-orange-100 text-orange-800 border border-orange-200'
-                        : 'hover:bg-gray-50 text-gray-700 bg-gray-25'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <div className="step-indicator">
-                        <span className="text-gray-700">{index + 1}</span>
-                      </div>
-                      <span className="ml-3 text-sm font-medium text-gray-700">{step.title}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-
               {/* Tutorial Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="mb-6">
                 <h4 className="font-medium text-gray-900 mb-3">Learning Objectives</h4>
                 <ul className="space-y-2 text-sm text-gray-700">
                   {tutorial.learningObjectives.map((objective, index) => (
@@ -224,102 +244,243 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                   ))}
                 </ul>
               </div>
+
+              {/* Steps Overview */}
+              <div>
+                <h4 className="font-medium text-gray-900 mb-3">Steps Overview</h4>
+                <div className="space-y-2">
+                  {tutorial.steps.map((step, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
+                        {index + 1}
+                      </div>
+                      <span className="text-sm text-gray-700">{step.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Main Content */}
           <div className="lg:col-span-3">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="bg-white rounded-lg shadow-sm"
-              >
-                {/* Step Header */}
-                <div className="p-6 border-b border-gray-200">
-                  <div className="flex items-center mb-4">
-                    <div className="step-indicator">
-                      <span className="text-lg">{currentStep + 1}</span>
-                    </div>
-                    <div className="ml-4">
-                      <h2 className="text-xl font-semibold text-gray-900">{currentStepData.title}</h2>
-                      <p className="text-gray-600">{currentStepData.description}</p>
-                    </div>
-                  </div>
+            <div className="bg-white rounded-lg shadow-sm">
+              {/* Tutorial Header */}
+              <div className="p-6 border-b border-gray-200">
+                <div className="mb-4">
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">{tutorial.title}</h2>
+                  <p className="text-gray-600">{tutorial.description}</p>
                 </div>
 
-                {/* Step Content */}
-                <div className="p-6">
-                  {/* Console Instructions */}
-                  <div className="mb-6">
-                    <div className="mb-4">
-                      <h3 className="font-semibold text-gray-900 flex items-center">
-                        <Monitor className="h-5 w-5 mr-2 text-aws-orange" />
-                        Console Instructions
-                      </h3>
-                    </div>
-                    <ol className="space-y-3">
-                      {currentStepData.consoleInstructions.map((instruction: any, index: number) => (
-                        <li key={index} className="flex items-start">
-                          <span className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
-                            {index + 1}
-                          </span>
-                          <span className="text-gray-700">{instruction}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
+                {/* Tab Navigation */}
+                <div className="flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab('console')}
+                    className={`flex items-center px-3 py-2 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === 'console'
+                        ? 'border-aws-orange text-aws-orange'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <Monitor className="h-4 w-4 mr-2" />
+                    Console Instructions
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('cli')}
+                    className={`flex items-center px-3 py-2 border-b-2 font-medium text-sm transition-colors ${
+                      activeTab === 'cli'
+                        ? 'border-aws-orange text-aws-orange'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <Terminal className="h-4 w-4 mr-2" />
+                    CLI Commands
+                  </button>
+                </div>
+              </div>
 
-                  {/* Tips */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <div className="flex items-start">
-                      <Lightbulb className="h-5 w-5 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <h4 className="font-medium text-blue-900 mb-2">Pro Tips</h4>
-                        <ul className="space-y-1 text-sm text-blue-800">
-                          {currentStepData.tips.map((tip: any, index: number) => (
-                            <li key={index}>• {tip}</li>
-                          ))}
-                        </ul>
+              {/* Tutorial Content */}
+              <div className="p-6">
+                <AnimatePresence mode="wait">
+                  {activeTab === 'console' ? (
+                    <motion.div
+                      key="console"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-8"
+                    >
+                      {/* Console Instructions for all steps */}
+                      {tutorial.steps.map((step, stepIndex) => (
+                        <div key={stepIndex} className="border border-gray-200 rounded-lg p-6">
+                          <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0 w-8 h-8 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-4">
+                              {stepIndex + 1}
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                              <p className="text-gray-600">{step.description}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="ml-12">
+                            <h4 className="font-semibold text-gray-900 flex items-center mb-3">
+                              <Monitor className="h-5 w-5 mr-2 text-aws-orange" />
+                              Console Instructions
+                            </h4>
+                            <ol className="space-y-3">
+                              {step.consoleInstructions.map((instruction: any, index: number) => (
+                                <li key={index} className="flex items-start">
+                                  <span className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
+                                    {index + 1}
+                                  </span>
+                                  <span className="text-gray-700">{instruction}</span>
+                                </li>
+                              ))}
+                            </ol>
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="cli"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-8"
+                    >
+                      {/* CLI Commands for all steps */}
+                      {tutorial.steps.map((step, stepIndex) => (
+                        <div key={stepIndex} className="border border-gray-200 rounded-lg p-6">
+                          <div className="flex items-center mb-4">
+                            <div className="flex-shrink-0 w-8 h-8 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-4">
+                              {stepIndex + 1}
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
+                              <p className="text-gray-600">{step.description}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="ml-12">
+                            <h4 className="font-semibold text-gray-900 flex items-center mb-3">
+                              <Terminal className="h-5 w-5 mr-2 text-aws-orange" />
+                              CLI Commands
+                            </h4>
+                            
+                            {step.cliCommands && step.cliCommands.length > 0 ? (
+                              <div className="space-y-4">
+                                {step.cliCommands.map((command: string, index: number) => (
+                                  <div key={index} className="bg-gray-900 rounded-lg p-4">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="text-sm text-gray-400">Command {index + 1}</span>
+                                      <button
+                                        onClick={() => copyToClipboard(command)}
+                                        className="flex items-center text-gray-400 hover:text-white transition-colors"
+                                      >
+                                        {copiedCommand === command ? (
+                                          <CheckCircle2 className="h-4 w-4 mr-1" />
+                                        ) : (
+                                          <Copy className="h-4 w-4 mr-1" />
+                                        )}
+                                        {copiedCommand === command ? 'Copied!' : 'Copy'}
+                                      </button>
+                                    </div>
+                                    <SyntaxHighlighter
+                                      language="bash"
+                                      style={tomorrow}
+                                      customStyle={{
+                                        margin: 0,
+                                        background: 'transparent',
+                                        fontSize: '14px',
+                                        fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
+                                      }}
+                                    >
+                                      {command}
+                                    </SyntaxHighlighter>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <div className="text-center py-6 text-gray-500">
+                                <Terminal className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                                <p>No CLI commands available for this step.</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* Tips Section */}
+                <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
+                  <div className="flex items-start">
+                    <Lightbulb className="h-6 w-6 text-blue-600 mr-3 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-medium text-blue-900 mb-3">Pro Tips</h4>
+                      <div className="space-y-4">
+                        {tutorial.steps.map((step, stepIndex) => (
+                          step.tips && step.tips.length > 0 && (
+                            <div key={stepIndex} className="border-l-4 border-blue-300 pl-4">
+                              <h5 className="font-medium text-blue-800 mb-2">Step {stepIndex + 1}: {step.title}</h5>
+                              <ul className="space-y-1 text-sm text-blue-800">
+                                {step.tips.map((tip: any, index: number) => (
+                                  <li key={index}>• {tip}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )
+                        ))}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Navigation */}
-                <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                  <div className="flex justify-between">
-                    <button
-                      onClick={prevStep}
-                      disabled={currentStep === 0}
-                      className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        currentStep === 0
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                      }`}
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-2" />
-                      Previous
-                    </button>
-                    <button
-                      onClick={nextStep}
-                      disabled={currentStep === tutorial.steps.length - 1}
-                      className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                        currentStep === tutorial.steps.length - 1
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-aws-orange text-white hover:bg-orange-600'
-                      }`}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4 ml-2" />
-                    </button>
+                {/* Mark as Completed Section - Only visible when user is logged in */}
+                {user && (
+                  <div className="mt-8 border-t border-gray-200 pt-8">
+                    <div className="text-center">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                        Congratulations! 🎉
+                      </h3>
+                      <p className="text-gray-600 mb-6">
+                        You've completed this tutorial. Mark it as completed to track your progress and earn achievements.
+                      </p>
+                      
+                      {isCompleted ? (
+                        <div className="inline-flex items-center px-6 py-3 bg-green-100 border border-green-300 rounded-lg text-green-800">
+                          <CheckCircle2 className="h-5 w-5 mr-2" />
+                          Tutorial completed successfully!
+                        </div>
+                      ) : (
+                        <button
+                          onClick={markAsCompleted}
+                          disabled={isCompleting}
+                          className="inline-flex items-center px-6 py-3 bg-aws-orange hover:bg-aws-orange-dark disabled:bg-gray-400 text-white font-medium rounded-lg transition-colors duration-200"
+                        >
+                          {isCompleting ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                              Marking as completed...
+                            </>
+                          ) : (
+                            <>
+                              <Trophy className="h-5 w-5 mr-2" />
+                              Mark as Completed
+                            </>
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            </AnimatePresence>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>

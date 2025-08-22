@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { dynamoDB } from '../../../lib/dynamodb';
 import { PutCommand, GetCommand } from '@aws-sdk/lib-dynamodb';
+import { getAllServices } from '../../../lib/dynamodb';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,7 +17,7 @@ export async function POST(request: NextRequest) {
 
     // Check if service already exists
     const existingService = await dynamoDB.send(new GetCommand({
-      TableName: 'aws-learning-lessons',
+      TableName: 'aws-learning-services',
       Key: { id: service.id }
     }));
 
@@ -38,7 +39,7 @@ export async function POST(request: NextRequest) {
     };
 
     await dynamoDB.send(new PutCommand({
-      TableName: 'aws-learning-lessons',
+      TableName: 'aws-learning-services',
       Item: serviceData
     }));
 
@@ -59,20 +60,12 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const { ScanCommand } = await import('@aws-sdk/lib-dynamodb');
-    
-    const result = await dynamoDB.send(new ScanCommand({
-      TableName: 'aws-learning-lessons',
-    }));
-    
-    return NextResponse.json({ 
-      success: true, 
-      data: result.Items || [] 
-    });
+    const services = await getAllServices();
+    return NextResponse.json({ success: true, data: services });
   } catch (error) {
-    console.error('API Error:', error);
+    console.error('Error fetching services:', error);
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: 'Failed to fetch services' },
       { status: 500 }
     );
   }

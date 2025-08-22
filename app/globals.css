@@ -54,4 +54,24 @@ body {
   .step-pending {
     @apply bg-gray-200 text-gray-700;
   }
+  
+  /* Ensure input fields always have proper text colors */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  textarea,
+  select {
+    @apply text-gray-900 placeholder-gray-500;
+  }
+  
+  /* Override any dark mode interference */
+  input[type="text"]:focus,
+  input[type="email"]:focus,
+  input[type="password"]:focus,
+  input[type="search"]:focus,
+  textarea:focus,
+  select:focus {
+    @apply text-gray-900;
+  }
 } 

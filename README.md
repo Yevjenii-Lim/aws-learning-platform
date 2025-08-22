@@ -9,6 +9,8 @@ An interactive learning platform that helps users master AWS services through st
 - **Progress Tracking**: Track your learning progress across tutorials
 - **Visual Learning**: Beautiful UI with animations and visual feedback
 - **Search & Filter**: Find tutorials by service or category
+- **User Authentication**: Secure login system with role-based access
+- **Admin Panel**: Manage content with protected admin interface
 - **AWS Architecture Builder**: Drag-and-drop interface to visualize network structures
 - **Pre-built Templates**: Start with common AWS architectures
 - **Component Connections**: Link components to show relationships
@@ -42,6 +44,60 @@ An interactive learning platform that helps users master AWS services through st
 
 4. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🔐 Authentication & User Management
+
+The platform includes a comprehensive user management system built with DynamoDB:
+
+### Demo Credentials
+- **Admin User**: `admin@example.com` / `admin123`
+- **Regular User**: `user@example.com` / `user123`
+
+### Features
+- **Secure Authentication**: Password hashing with bcrypt
+- **Session Management**: HTTP-only cookies for secure sessions
+- **Role-based Access**: Different permissions for admin and regular users
+- **User Dashboard**: Personal learning progress and statistics
+- **Progress Tracking**: Tutorial completion, quiz scores, and learning time
+- **Learning Analytics**: Comprehensive user statistics and achievements
+
+### User Data Structure
+```typescript
+{
+  email: string,           // Primary key
+  id: string,             // Sort key
+  name: string,
+  passwordHash: string,   // Securely hashed
+  role: 'admin' | 'user',
+  createdAt: string,
+  lastLogin: string,
+  isActive: boolean,
+  profile: {
+    avatar: string,
+    bio: string,
+    preferences: object
+  },
+  progress: {
+    completedTutorials: string[],
+    quizScores: Record<string, number>,
+    totalTimeSpent: number,
+    lastActivity: string,
+    learningStreak: number,
+    achievements: string[]
+  },
+  subscription: {
+    plan: 'free' | 'premium' | 'admin',
+    expiresAt: string
+  }
+}
+```
+
+### Progress Tracking
+- **Tutorial Completion**: Track completed tutorials
+- **Quiz Scores**: Store and analyze quiz performance
+- **Learning Time**: Monitor time spent learning
+- **Learning Streak**: Track consecutive days of activity
+- **Achievements**: Gamification system for engagement
 
 ## 📚 Available Tutorials
 
