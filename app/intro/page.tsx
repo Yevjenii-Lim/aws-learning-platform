@@ -13,13 +13,29 @@ import {
   Globe,
   ChevronRight,
   Play,
-  CheckCircle
+  CheckCircle,
+  HelpCircle,
+  Search,
+  BarChart3,
+  LogIn,
+  Settings,
+  Calculator,
+  MessageSquare,
+  Gamepad2,
+  Award
 } from 'lucide-react';
 import Link from 'next/link';
 import { AnimatePresence } from 'framer-motion';
+import ClientOnly from '../components/ClientOnly';
+import { useAuth } from '../contexts/AuthContext';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 export default function IntroPage() {
   const [activeSection, setActiveSection] = useState(0);
+  const { user } = useAuth();
+
+
 
   const sections = [
     {
@@ -85,42 +101,16 @@ export default function IntroPage() {
     }
   ];
 
-  const benefits = [
-    {
-      icon: Users,
-      title: "Team Learning",
-      description: "Perfect for teams learning AWS together"
-    },
-    {
-      icon: Shield,
-      title: "Hands-on Practice",
-      description: "Learn by doing with real AWS services"
-    },
-    {
-      icon: Globe,
-      title: "Visual Learning",
-      description: "See concepts come to life with interactive diagrams"
-    }
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <Link href="/" className="flex items-center text-gray-600 hover:text-gray-900">
-              <ArrowLeft className="h-5 w-5 mr-2" />
-              Back to Platform
-            </Link>
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900">Welcome to AWS Learning</h1>
-              <p className="text-sm text-gray-600">Your journey to AWS mastery starts here</p>
-            </div>
-            <div className="w-20"></div> {/* Spacer for centering */}
-          </div>
-        </div>
-      </header>
+      <Header
+        title="Welcome to AWS Learning"
+        subtitle="Your journey to AWS mastery starts here"
+        showBackButton={true}
+        backUrl="/"
+        showGamesButton={false}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Hero Section */}
@@ -141,25 +131,186 @@ export default function IntroPage() {
             </p>
           </motion.div>
 
+
+        </div>
+
+        {/* Who is This For? Section */}
+        <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Who is This For?</h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Primary Users */}
+            <div>
+              <h4 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Users className="h-6 w-6 mr-2 text-aws-orange" />
+                Primary Users
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">AWS Beginners</h5>
+                    <p className="text-sm text-gray-600">New to cloud computing and looking for a clear starting point</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">Students</h5>
+                    <p className="text-sm text-gray-600">Bootcamp participants and those preparing for cloud careers</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">Career Changers</h5>
+                    <p className="text-sm text-gray-600">Professionals transitioning into tech and cloud roles</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">Aspiring Cloud Professionals</h5>
+                    <p className="text-sm text-gray-600">Building foundational AWS knowledge</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Secondary Users */}
+            <div>
+              <h4 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                <Award className="h-6 w-6 mr-2 text-aws-orange" />
+                Secondary Users
+              </h4>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">Educators & Trainers</h5>
+                    <p className="text-sm text-gray-600">Teaching cloud concepts to students</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">Certification Candidates</h5>
+                    <p className="text-sm text-gray-600">Preparing for AWS certification exams</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-3">
+                  <div className="w-2 h-2 bg-aws-orange rounded-full mt-2 flex-shrink-0"></div>
+                  <div>
+                    <h5 className="font-medium text-gray-900">Organizations</h5>
+                    <p className="text-sm text-gray-600">Training staff on cloud technologies</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Getting Started Section */}
+        <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Getting Started</h3>
+          <div className="space-y-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="flex items-start space-x-4"
+            >
+              <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                1
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Create Your Account</h4>
+                <p className="text-gray-600">Sign up with your username and password</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="flex items-start space-x-4"
+            >
+              <div className="w-8 h-8 bg-green-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                2
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Explore the Service Cards</h4>
+                <p className="text-gray-600">Start with our Service Explorer where the 7 core AWS services are presented as interactive cards. Click any card to flip it and see a simple explanation with analogies.</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="flex items-start space-x-4"
+            >
+              <div className="w-8 h-8 bg-purple-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                3
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Begin Your Learning Journey</h4>
+                <p className="text-gray-600">Choose a service that interests you and start its learning module. Each module follows our proven 4-part structure for maximum understanding.</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex items-start space-x-4"
+            >
+              <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                4
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Track Your Progress</h4>
+                <p className="text-gray-600">Watch your dashboard fill up as you complete modules, earn points, and unlock badges. Celebrate each milestone in your cloud learning journey.</p>
+              </div>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex items-start space-x-4"
+            >
+              <div className="w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 mt-1">
+                5
+              </div>
+              <div className="flex-1">
+                <h4 className="text-lg font-semibold text-gray-900 mb-2">Practice with Real-World Tools</h4>
+                <p className="text-gray-600">Use our cost calculator to estimate expenses for different AWS configurations, building practical skills you'll use in the real world.</p>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+
+        {/* Action Links */}
+        <div className="text-center mb-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
             className="flex justify-center space-x-4"
           >
             <Link
-              href="/tutorial/vpc/create-vpc"
+              href="/tutorial/compute/launch-instance"
               className="aws-button flex items-center px-6 py-3 text-lg"
             >
               <Play className="h-5 w-5 mr-2" />
-              Start Learning
+              Start Learning EC2
             </Link>
             <Link
-              href="/constructor"
+              href="/games"
               className="aws-button-secondary flex items-center px-6 py-3 text-lg"
             >
-              <Globe className="h-5 w-5 mr-2" />
-              Try Architecture Builder
+              <Gamepad2 className="h-5 w-5 mr-2" />
+              Try Games
             </Link>
           </motion.div>
         </div>
@@ -228,122 +379,81 @@ export default function IntroPage() {
             </motion.div>
           </AnimatePresence>
         </div>
+        
 
-        {/* Benefits Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {benefits.map((benefit, index) => {
-            const Icon = benefit.icon;
-            return (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="bg-white rounded-lg shadow-sm p-6 text-center"
-              >
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <Icon className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">{benefit.title}</h3>
-                <p className="text-gray-600">{benefit.description}</p>
-              </motion.div>
-            );
-          })}
-        </div>
+        {/* Navigation Tips */}
+        <div className="bg-white rounded-lg shadow-sm p-8 mt-8">
+          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Navigation Tips</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className="text-center"
+            >
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <HelpCircle className="h-6 w-6 text-blue-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Start Simple</h4>
+              <p className="text-gray-600">Begin with fundamental services like S3 or EC2 if you're completely new</p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <BarChart3 className="h-6 w-6 text-green-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Dashboard Overview</h4>
+              <p className="text-gray-600">Your progress wheel shows overall completion at a glance</p>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="text-center"
+            >
+              <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Search className="h-6 w-6 text-purple-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Service Cards</h4>
+              <p className="text-gray-600">Each service card flips to reveal key information and learning objectives</p>
+            </motion.div>
 
-        {/* Learning Path */}
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Your Learning Path</h3>
-          
-          <div className="space-y-6">
-            {[
-              {
-                step: 1,
-                title: "Networking Foundation",
-                description: "Learn VPC (Virtual Private Cloud) - the foundation of AWS networking",
-                service: "VPC",
-                tutorial: "Create Your First VPC",
-                color: "bg-blue-500"
-              },
-              {
-                step: 2,
-                title: "Compute Services",
-                description: "Master EC2 (Elastic Compute Cloud) - virtual servers in the cloud",
-                service: "EC2",
-                tutorial: "Launch Your First EC2 Instance",
-                color: "bg-green-500"
-              },
-              {
-                step: 3,
-                title: "Storage Solutions",
-                description: "Explore S3 (Simple Storage Service) - object storage for any data",
-                service: "S3",
-                tutorial: "Create and Configure S3 Bucket",
-                color: "bg-orange-500"
-              },
-              {
-                step: 4,
-                title: "Database Services",
-                description: "Learn RDS (Relational Database Service) - managed databases",
-                service: "RDS",
-                tutorial: "Create RDS Database Instance",
-                color: "bg-purple-500"
-              }
-            ].map((path, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className="flex items-center space-x-4"
-              >
-                <div className={`w-8 h-8 ${path.color} text-white rounded-full flex items-center justify-center text-sm font-bold`}>
-                  {path.step}
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900">{path.title}</h4>
-                  <p className="text-gray-600 text-sm">{path.description}</p>
-                </div>
-                <Link
-                  href={`/tutorial/${path.service.toLowerCase()}/${path.tutorial.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="aws-button-secondary flex items-center px-4 py-2 text-sm"
-                >
-                  Start
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Link>
-              </motion.div>
-            ))}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center"
+            >
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <MessageSquare className="h-6 w-6 text-orange-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Quiz Feedback</h4>
+              <p className="text-gray-600">Get immediate results and explanations for all quiz questions</p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="text-center"
+            >
+              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Calculator className="h-6 w-6 text-red-600" />
+              </div>
+              <h4 className="text-lg font-semibold text-gray-900 mb-2">Cost Calculator</h4>
+              <p className="text-gray-600">Practice with different scenarios to build financial estimation skills</p>
+            </motion.div>
           </div>
         </div>
-
-        {/* Call to Action */}
-        <div className="text-center mt-12">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-          >
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">Ready to Start Your AWS Journey?</h3>
-            <p className="text-gray-600 mb-6">Choose your starting point and begin building your cloud expertise today.</p>
-            <div className="flex justify-center space-x-4">
-              <Link
-                href="/tutorial/vpc/create-vpc"
-                className="aws-button flex items-center px-8 py-3 text-lg"
-              >
-                <Play className="h-5 w-5 mr-2" />
-                Start with VPC Tutorial
-              </Link>
-              <Link
-                href="/games"
-                className="aws-button-secondary flex items-center px-8 py-3 text-lg"
-              >
-                <Globe className="h-5 w-5 mr-2" />
-                Explore Learning Games
-              </Link>
-            </div>
-          </motion.div>
-        </div>
       </div>
+
+      <Footer />
     </div>
   );
 } 

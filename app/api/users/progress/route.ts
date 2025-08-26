@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addLearningTime, updateUserProgress } from '@/lib/users';
+import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +51,15 @@ export async function POST(request: NextRequest) {
       
       case 'update_progress':
         success = await updateUserProgress(user.email, user.id, data.progress);
+        break;
+      
+      case 'recalculate_streak':
+        success = await updateLearningStreak(user.email, user.id);
+        break;
+      
+      case 'add_test_activities':
+        // Add test activities for streak testing (for development only)
+        success = await addTestActivities(user.email, user.id, data.days);
         break;
       
       default:

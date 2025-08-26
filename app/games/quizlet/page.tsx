@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import ClientOnly from '../../components/ClientOnly';
+import Header from '../../components/Header';
 
 interface QuizQuestion {
   id: string;
@@ -191,34 +192,26 @@ export default function QuizletPage() {
   const progress = ((currentQuestionIndex + 1) / quizQuestions.length) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center space-x-4">
-              <Link href="/games" className="text-gray-600 hover:text-gray-900">
-                <ArrowLeft className="h-5 w-5" />
-              </Link>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">AWS Quiz</h1>
-                <p className="text-sm text-gray-600">Test your AWS knowledge</p>
-              </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header
+        title="AWS Quiz"
+        subtitle="Test your AWS knowledge"
+        showBackButton={true}
+        backUrl="/games"
+        showGamesButton={false}
+        customActions={
+          <div className="flex items-center space-x-4 text-sm text-gray-600">
+            <div className="flex items-center">
+              <Target className="h-4 w-4 mr-1" />
+              {score}/{totalQuestions}
             </div>
-            <div className="flex items-center space-x-4 text-sm text-gray-600">
-              <div className="flex items-center">
-                <Target className="h-4 w-4 mr-1" />
-                {score}/{totalQuestions}
-              </div>
-              <div className="flex items-center">
-                <BookOpen className="h-4 w-4 mr-1" />
-                {currentQuestionIndex + 1} of {quizQuestions.length}
-              </div>
+            <div className="flex items-center">
+              <BookOpen className="h-4 w-4 mr-1" />
+              {currentQuestionIndex + 1} of {quizQuestions.length}
             </div>
           </div>
-        </div>
-      </header>
+        }
+      />
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Category Filter */}

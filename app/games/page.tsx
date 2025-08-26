@@ -14,6 +14,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import ClientOnly from '../components/ClientOnly';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 interface GameCard {
   id: string;
@@ -62,28 +64,23 @@ const games: GameCard[] = [
 export default function GamesPage() {
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-3">🎮</div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">AWS Learning Games</h1>
-                <p className="text-gray-600">Learn AWS through interactive games and activities</p>
-              </div>
-            </div>
-            <Link
-              href="/"
-              className="aws-button flex items-center"
-            >
-              <BookOpen className="h-4 w-4 mr-2" />
-              Back to Lessons
-            </Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header
+        title="AWS Learning Games"
+        subtitle="Learn AWS through interactive games and activities"
+        showBackButton={true}
+        backUrl="/"
+        showGamesButton={false}
+        customActions={
+          <Link
+            href="/"
+            className="aws-button flex items-center"
+          >
+            <BookOpen className="h-4 w-4 mr-2" />
+            Back to Home
+          </Link>
+        }
+      />
 
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -186,6 +183,7 @@ export default function GamesPage() {
           </div>
         </div>
       </main>
+      <Footer />
     </div>
   );
 } 

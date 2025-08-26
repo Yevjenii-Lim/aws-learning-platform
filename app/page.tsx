@@ -5,9 +5,8 @@ import { Search, BookOpen, Clock, Target, ChevronRight, Plus, Play, Gamepad2, Ar
 import Link from 'next/link';
 import ClientOnly from './components/ClientOnly';
 import { useAuth } from './contexts/AuthContext';
-import LoginModal from './components/LoginModal';
-import RegisterModal from './components/RegisterModal';
-import UserMenu from './components/UserMenu';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 interface LearningTopic {
   id: string;
@@ -27,8 +26,6 @@ export default function HomePage() {
   const [learningTopics, setLearningTopics] = useState<LearningTopic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -109,15 +106,7 @@ export default function HomePage() {
     topic.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleSwitchToRegister = () => {
-    setIsLoginModalOpen(false);
-    setIsRegisterModalOpen(true);
-  };
 
-  const handleSwitchToLogin = () => {
-    setIsRegisterModalOpen(false);
-    setIsLoginModalOpen(true);
-  };
 
   const getIconComponent = (icon: string) => {
     const iconMap: { [key: string]: any } = {
@@ -134,65 +123,13 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <div className="text-3xl mr-3">☁️</div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">AWS Learning Platform</h1>
-                <p className="text-gray-600">Interactive learning with visualizations and step-by-step guides</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <input
-                  type="text"
-                  placeholder="Search topics"
-                  className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-aws-orange focus:border-transparent text-gray-900"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-                <ClientOnly>
-                  {searchTerm && (
-                    <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs text-gray-500">
-                      {filteredTopics.length} results
-                    </div>
-                  )}
-                </ClientOnly>
-              </div>
-              <Link href="/games" className="aws-button flex items-center">
-                <Gamepad2 className="h-4 w-4 mr-2" />
-                Games
-              </Link>
-              {user ? (
-                <UserMenu />
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setIsLoginModalOpen(true)}
-                    className="aws-button flex items-center"
-                  >
-                    <LogIn className="h-4 w-4 mr-2" />
-                    Login
-                  </button>
-                  <button
-                    onClick={() => setIsRegisterModalOpen(true)}
-                    className="px-4 py-2 border border-aws-orange text-aws-orange rounded-lg hover:bg-aws-orange hover:text-white transition-colors"
-                  >
-                    Register
-                  </button>
-                </div>
-              )}
-              <Link href="/admin" className="text-gray-600 hover:text-gray-900">
-                <Settings className="h-5 w-5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header
+        showSearch={true}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        searchResults={filteredTopics.length}
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="text-center mb-12">
@@ -271,7 +208,7 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, delay: index * 0.1 }}
-                    className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200 hover:border-aws-orange"
+                    className="bg-white rounded-lg shadow-sm p-6 hover:shadow-md transition-all duration-300 border border-gray-200 hover:border-aws-orange flex flex-col h-full"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center">
@@ -288,40 +225,42 @@ export default function HomePage() {
                             }`}>
                               {topic.difficulty}
                             </span>
-                                                       <span className="text-sm text-gray-500">
-                             {topic.tutorialCount} tutorial{topic.tutorialCount !== 1 ? 's' : ''}
-                           </span>
+                            <span className="text-sm text-gray-500">
+                              {topic.tutorialCount} tutorial{topic.tutorialCount !== 1 ? 's' : ''}
+                            </span>
                           </div>
                         </div>
                       </div>
                     </div>
                     
-                    <p className="text-gray-600 mb-4">{topic.description}</p>
+                    <div className="flex-1">
+                      <p className="text-gray-600 mb-4">{topic.description}</p>
+                      
+                      <div className="mb-4">
+                        <div className="text-sm font-medium text-gray-700 mb-2">Services covered:</div>
+                        <div className="flex flex-wrap gap-1">
+                          {topic.serviceNames && topic.serviceNames.map((serviceName: string, serviceIndex: number) => (
+                            <span
+                              key={serviceIndex}
+                              className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                            >
+                              {serviceName}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
                     
-                                         <div className="mb-4">
-                       <div className="text-sm font-medium text-gray-700 mb-2">Services covered:</div>
-                       <div className="flex flex-wrap gap-1">
-                         {topic.serviceNames && topic.serviceNames.map((serviceName: string, serviceIndex: number) => (
-                           <span
-                             key={serviceIndex}
-                             className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-                           >
-                             {serviceName}
-                           </span>
-                         ))}
-                       </div>
-                     </div>
-                    
-                                         <div className="flex justify-between items-center">
-                       <Link 
-                         href={`/topics/${topic.id}`}
-                         className="aws-button flex items-center"
-                       >
-                         <Play className="h-4 w-4 mr-2" />
-                         {topic.tutorialCount > 0 ? 'Start Learning' : 'View Topic'}
-                       </Link>
-                       <ChevronRight className="h-5 w-5 text-gray-400" />
-                     </div>
+                    <div className="flex justify-between items-center mt-auto pt-4">
+                      <Link 
+                        href={`/topics/${topic.id}`}
+                        className="aws-button flex items-center"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        View Topic
+                      </Link>
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </div>
                   </motion.div>
                 );
               })}
@@ -374,80 +313,7 @@ export default function HomePage() {
         </div>
       </main>
       
-      <footer className="bg-gray-900 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center mb-4">
-                <div className="text-2xl mr-2">☁️</div>
-                <h3 className="text-lg font-semibold">AWS Learning Platform</h3>
-              </div>
-              <p className="text-gray-400 mb-4">
-                Master AWS services through interactive tutorials, visual guides, and hands-on practice.
-              </p>
-              <div className="flex space-x-4">
-                <a href="#" className="text-gray-400 hover:text-white">
-                  <Users className="h-5 w-5" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white">
-                  <Award className="h-5 w-5" />
-                </a>
-                <a href="#" className="text-gray-400 hover:text-white">
-                  <Zap className="h-5 w-5" />
-                </a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Learning</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white">Topics</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Tutorials</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Games</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Flashcards</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Topics</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white">Networking</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Compute</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Storage</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Security</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="text-lg font-semibold mb-4">Support</h4>
-              <ul className="space-y-2">
-                <li><a href="#" className="text-gray-400 hover:text-white">Help Center</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Contact Us</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Feedback</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-white">Documentation</a></li>
-              </ul>
-            </div>
-          </div>
-          
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400">
-              © 2025 AWS Learning Platform. Built with Next.js and AWS services.
-            </p>
-          </div>
-        </div>
-      </footer>
-      
-      <LoginModal 
-        isOpen={isLoginModalOpen} 
-        onClose={() => setIsLoginModalOpen(false)}
-        onSwitchToRegister={handleSwitchToRegister}
-      />
-      
-      <RegisterModal
-        isOpen={isRegisterModalOpen}
-        onClose={() => setIsRegisterModalOpen(false)}
-        onSwitchToLogin={handleSwitchToLogin}
-      />
+      <Footer />
     </div>
   );
 } 

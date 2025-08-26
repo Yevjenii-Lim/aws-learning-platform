@@ -278,6 +278,9 @@ export async function completeFlashcards(
       })
     }));
 
+    // Update learning streak after completing flashcards
+    await updateLearningStreak(email, id);
+
     return true;
   } catch (error) {
     console.error('Complete flashcards error:', error);
@@ -326,6 +329,10 @@ export async function completeTutorial(
         ':completedTutorials': [...currentCompletedTutorials, tutorialCompletion]
       })
     }));
+
+    // Update learning streak after completing tutorial
+    await updateLearningStreak(email, id);
+    
     return true;
   } catch (error) {
     console.error('❌ Complete tutorial error:', error);
@@ -503,5 +510,147 @@ export async function getUserStats(email: string, id: string): Promise<{
   } catch (error) {
     console.error('Get user stats error:', error);
     return null;
+  }
+}
+
+
+
+// Calculate learning streak based on recent activity
+function calculateLearningStreak(recentActivity: Array<{
+  type: 'tutorial' | 'quiz' | 'achievement';
+  title: string;
+  description: string;
+  timestamp: string;
+  link?: string;
+}>): number {
+  if (!recentActivity || recentActivity.length === 0) {
+    return 0;
+  }
+
+  // Get unique dates from recent activity (tutorials and flashcards only)
+  const activityDates = new Set<string>();
+  
+  recentActivity.forEach(activity => {
+    if (activity.type === 'tutorial' || activity.description.includes('flashcard')) {
+      const date = new Date(activity.timestamp).toDateString();
+      activityDates.add(date);
+    }
+  });
+
+  // Sort dates in descending order
+  const sortedDates = Array.from(activityDates).sort((a, b) => 
+    new Date(b).getTime() - new Date(a).getTime()
+  );
+
+  if (sortedDates.length === 0) {
+    return 0;
+  }
+
+  let currentStreak = 0;
+  let maxStreak = 0;
+  let previousDate: Date | null = null;
+
+  for (const dateStr of sortedDates) {
+    const currentDate = new Date(dateStr);
+    
+    if (previousDate === null) {
+      // First activity
+      currentStreak = 1;
+      maxStreak = 1;
+    } else {
+      const dayDiff = Math.floor((previousDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (dayDiff === 1) {
+        // Consecutive day
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else if (dayDiff === 0) {
+        // Same day, continue streak
+        continue;
+      } else {
+        // Gap in days, reset streak
+        currentStreak = 1;
+      }
+    }
+    
+    previousDate = currentDate;
+  }
+
+  return maxStreak;
+}
+
+// Update learning streak when user completes activities
+export async function updateLearningStreak(email: string, id: string): Promise<boolean> {
+  try {
+    const user = await getUserByEmail(email);
+    if (!user) return false;
+
+    const { recentActivity } = user.progress;
+    const newStreak = calculateLearningStreak(recentActivity);
+
+    // Only update if the streak has changed
+    if (newStreak !== user.progress.learningStreak) {
+      await client.send(new UpdateItemCommand({
+        TableName: TABLE_NAME,
+        Key: marshall({ email, id }),
+        UpdateExpression: 'SET progress.learningStreak = :learningStreak',
+        ExpressionAttributeValues: marshall({
+          ':learningStreak': newStreak
+        })
+      }));
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Update learning streak error:', error);
+    return false;
+  }
+}
+
+// Add test activities for streak testing (development only)
+export async function addTestActivities(email: string, id: string, days: number): Promise<boolean> {
+  try {
+    const user = await getUserByEmail(email);
+    if (!user) return false;
+
+    const currentRecentActivity = user.progress.recentActivity || [];
+    const testActivities = [];
+
+    // Add activities for the specified number of days
+    for (let i = 0; i < days; i++) {
+      const date = new Date();
+      date.setDate(date.getDate() - i); // Go back i days
+      
+      const activityItem = {
+        type: 'tutorial' as const,
+        title: `Test Tutorial Day ${i + 1}`,
+        description: `Completed test tutorial for day ${i + 1}`,
+        timestamp: date.toISOString(),
+        link: `/tutorial/test/test-${i + 1}`
+      };
+      
+      testActivities.push(activityItem);
+    }
+
+    // Combine with existing activities
+    const updatedActivities = [...testActivities, ...currentRecentActivity];
+
+    await client.send(new UpdateItemCommand({
+      TableName: TABLE_NAME,
+      Key: marshall({ email, id }),
+      UpdateExpression: 'SET progress.recentActivity = :recentActivity, progress.lastActivity = :lastActivity',
+      ExpressionAttributeValues: marshall({
+        ':recentActivity': updatedActivities,
+        ':lastActivity': new Date().toISOString()
+      })
+    }));
+
+    // Update the streak after adding test activities
+    await updateLearningStreak(email, id);
+
+    return true;
+  } catch (error) {
+    console.error('Add test activities error:', error);
+    return false;
   }
 } 

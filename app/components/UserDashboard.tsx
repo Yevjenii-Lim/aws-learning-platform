@@ -52,6 +52,8 @@ export default function UserDashboard() {
   const [progress, setProgress] = useState<UserProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [showAllActivities, setShowAllActivities] = useState(false);
+  const [recalculatingStreak, setRecalculatingStreak] = useState(false);
+  const [addingTestData, setAddingTestData] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -129,6 +131,56 @@ export default function UserDashboard() {
     return dateTimeString;
   };
 
+  const recalculateStreak = async () => {
+    setRecalculatingStreak(true);
+    try {
+      const response = await fetch('/api/users/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'recalculate_streak',
+          data: {}
+        })
+      });
+
+      if (response.ok) {
+        // Refresh user data to show updated streak
+        await fetchUserData();
+      }
+    } catch (error) {
+      console.error('Error recalculating streak:', error);
+    } finally {
+      setRecalculatingStreak(false);
+    }
+  };
+
+  const addTestActivities = async (days: number) => {
+    setAddingTestData(true);
+    try {
+      const response = await fetch('/api/users/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'add_test_activities',
+          data: { days }
+        })
+      });
+
+      if (response.ok) {
+        // Refresh user data to show updated streak
+        await fetchUserData();
+      }
+    } catch (error) {
+      console.error('Error adding test activities:', error);
+    } finally {
+      setAddingTestData(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -194,7 +246,116 @@ export default function UserDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Learning Streak</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.learningStreak} days</p>
+                {stats.learningStreak > 0 && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    {stats.learningStreak === 1 ? 'Keep it up!' : 
+                     stats.learningStreak < 7 ? 'Great consistency!' :
+                     stats.learningStreak < 30 ? 'Amazing dedication!' : 'Legendary streak!'}
+                  </p>
+                )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Learning Streak Details */}
+      {stats && stats.learningStreak > 0 && (
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2 text-purple-600" />
+              Learning Streak Details
+            </h3>
+            <div className="flex items-center space-x-2">
+              <div className="text-2xl font-bold text-purple-600">{stats.learningStreak}</div>
+              <div className="text-sm text-gray-600">days</div>
+            </div>
+          </div>
+          
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                <span className="text-sm font-medium text-gray-900">Current Streak</span>
+              </div>
+              <span className="text-sm font-semibold text-purple-600">{stats.learningStreak} days</span>
+            </div>
+            
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+                <span className="text-sm font-medium text-gray-900">Streak Milestones</span>
+              </div>
+              <div className="flex space-x-2">
+                {[1, 7, 30, 100].map(milestone => (
+                  <div
+                    key={milestone}
+                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                      stats.learningStreak >= milestone
+                        ? 'bg-purple-500 text-white'
+                        : 'bg-gray-200 text-gray-500'
+                    }`}
+                    title={`${milestone} day${milestone > 1 ? 's' : ''}`}
+                  >
+                    {milestone >= 100 ? '100' : milestone}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+              <strong>💡 Tip:</strong> Complete a tutorial or flashcard session each day to maintain your streak!
+            </div>
+            
+            <div className="flex justify-center space-x-2 pt-2">
+              <button
+                onClick={recalculateStreak}
+                disabled={recalculatingStreak}
+                className="inline-flex items-center px-3 py-1 text-xs font-medium text-purple-600 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors disabled:opacity-50"
+              >
+                {recalculatingStreak ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b border-purple-600 mr-2"></div>
+                    Recalculating...
+                  </>
+                ) : (
+                  '🔄 Recalculate Streak'
+                )}
+              </button>
+              
+              {/* Development test buttons */}
+              <button
+                onClick={() => addTestActivities(3)}
+                disabled={addingTestData}
+                className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors disabled:opacity-50"
+                title="Add 3 days of test activities"
+              >
+                {addingTestData ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600 mr-2"></div>
+                    Adding...
+                  </>
+                ) : (
+                  '🧪 Test 3 Days'
+                )}
+              </button>
+              
+              <button
+                onClick={() => addTestActivities(7)}
+                disabled={addingTestData}
+                className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-600 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors disabled:opacity-50"
+                title="Add 7 days of test activities"
+              >
+                {addingTestData ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3 w-3 border-b border-green-600 mr-2"></div>
+                    Adding...
+                  </>
+                ) : (
+                  '🧪 Test 7 Days'
+                )}
+              </button>
             </div>
           </div>
         </div>

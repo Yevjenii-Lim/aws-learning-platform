@@ -8,6 +8,7 @@ import FlashcardForm from './components/FlashcardForm';
 import TopicForm from './components/TopicForm';
 import QuizForm from './components/QuizForm';
 import { useAuth } from '../contexts/AuthContext';
+import Header from '../components/Header';
 
 
 export default function AdminPage() {
@@ -440,33 +441,28 @@ export default function AdminPage() {
   // TODO: Re-enable authentication when ready
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center">
-              <Settings className="h-8 w-8 text-orange-500 mr-3" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-gray-600">Manage topics, tutorials, flashcards, and quizzes</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={fetchAllData}
-                disabled={loading}
-                className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
-              >
-                {loading ? 'Refreshing...' : 'Refresh Data'}
-              </button>
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
-                ← Back to Home
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Header
+        title="Admin Panel"
+        subtitle="Manage topics, tutorials, flashcards, and quizzes"
+        showBackButton={true}
+        backUrl="/"
+        showGamesButton={false}
+        customActions={
+          <>
+            <button
+              onClick={fetchAllData}
+              disabled={loading}
+              className="text-blue-600 hover:text-blue-800 disabled:text-gray-400"
+            >
+              {loading ? 'Refreshing...' : 'Refresh Data'}
+            </button>
+            <Link href="/" className="text-gray-600 hover:text-gray-900">
+              ← Back to Home
+            </Link>
+          </>
+        }
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Tabs */}
