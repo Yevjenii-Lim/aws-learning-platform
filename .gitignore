@@ -37,8 +37,21 @@ next-env.d.ts
 .idea/
 
 # AWS CLI installer
-*.pkg env.local
+*.pkg
 AWSCLIV2.pkg
+
+# Local environment files with secrets
+env.local
+.env.local
+.env.production.local
+.env.development.local
+
+# Cognito configuration files
+cognito-config.json
+
+# Migration results and temporary files
+migration-results-*.json
+cookies.txt
 
 # Sensitive scripts with credentials
 scripts/migrate-recent-activity.js

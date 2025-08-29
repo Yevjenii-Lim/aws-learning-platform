@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { Save, X, Plus, Trash2, MoveUp, MoveDown } from 'lucide-react';
+import { Save, X, Plus, Trash2, MoveUp, MoveDown, Upload, Image, X as XIcon } from 'lucide-react';
 
 interface TutorialFormProps {
   topics: any[];
@@ -17,6 +17,7 @@ interface Step {
   consoleInstructions: string[];
   cliCommands: string[];
   tips: string[];
+  screenshot?: string;
 }
 
 export default function TutorialForm({ topics, services, onSave, onCancel, editingTutorial }: TutorialFormProps) {
@@ -38,6 +39,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
   const [newCliCommand, setNewCliCommand] = useState('');
   const [newTip, setNewTip] = useState('');
   const [newService, setNewService] = useState('');
+  const [uploadingScreenshots, setUploadingScreenshots] = useState<{ [key: number]: boolean }>({});
 
 
   useEffect(() => {
@@ -94,7 +96,8 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
       description: '',
       consoleInstructions: [],
       cliCommands: [],
-      tips: []
+      tips: [],
+      screenshot: undefined
     };
     setFormData(prev => ({
       ...prev,
@@ -193,6 +196,42 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
       ...prev,
       services: prev.services.filter((_, i) => i !== index)
     }));
+  };
+
+  const handleScreenshotUpload = async (stepIndex: number, file: File) => {
+    if (!file || !formData.topicId || !formData.id) return;
+
+    setUploadingScreenshots(prev => ({ ...prev, [stepIndex]: true }));
+
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append('file', file);
+      formDataToSend.append('serviceId', formData.topicId); // Using topicId as serviceId
+      formDataToSend.append('tutorialId', formData.id);
+      formDataToSend.append('stepId', (stepIndex + 1).toString());
+
+      const response = await fetch('/api/tutorials/upload-screenshot', {
+        method: 'POST',
+        body: formDataToSend,
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        updateStep(stepIndex, 'screenshot', result.imageUrl);
+      } else {
+        alert('Failed to upload screenshot: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error uploading screenshot:', error);
+      alert('Failed to upload screenshot');
+    } finally {
+      setUploadingScreenshots(prev => ({ ...prev, [stepIndex]: false }));
+    }
+  };
+
+  const removeScreenshot = (stepIndex: number) => {
+    updateStep(stepIndex, 'screenshot', undefined);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -657,6 +696,68 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                           <Plus className="h-4 w-4" />
                         </button>
                       </div>
+                    </div>
+                  </div>
+
+                  {/* Screenshot Upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Screenshot (Optional)
+                    </label>
+                    <div className="space-y-3">
+                      {step.screenshot ? (
+                        <div className="relative">
+                          <img
+                            src={step.screenshot}
+                            alt={`Screenshot for step ${step.id}`}
+                            className="w-full max-w-md h-auto rounded-lg border border-gray-300"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeScreenshot(stepIndex)}
+                            className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                          >
+                            <XIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                handleScreenshotUpload(stepIndex, file);
+                              }
+                            }}
+                            className="hidden"
+                            id={`screenshot-upload-${stepIndex}`}
+                            disabled={uploadingScreenshots[stepIndex]}
+                          />
+                          <label
+                            htmlFor={`screenshot-upload-${stepIndex}`}
+                            className={`cursor-pointer flex flex-col items-center space-y-2 ${
+                              uploadingScreenshots[stepIndex] ? 'opacity-50 cursor-not-allowed' : ''
+                            }`}
+                          >
+                            {uploadingScreenshots[stepIndex] ? (
+                              <>
+                                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-aws-orange"></div>
+                                <span className="text-sm text-gray-600">Uploading...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Upload className="h-8 w-8 text-gray-400" />
+                                <div>
+                                  <span className="text-sm font-medium text-aws-orange">Upload Screenshot</span>
+                                  <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                </div>
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

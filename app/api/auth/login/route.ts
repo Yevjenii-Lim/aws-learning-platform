@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { authenticateUser, authenticateUserByUsername } from '@/lib/users';
+import { signIn, adminSignIn } from '@/lib/cognito';
+import { getUserByEmail } from '@/lib/users';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,24 +21,55 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let user;
+    // Try Cognito authentication first
+    let authResult;
     if (email) {
-      user = await authenticateUser(email, password);
+      authResult = await signIn(email, password);
     } else {
-      user = await authenticateUserByUsername(username, password);
+      authResult = await signIn(username, password);
     }
 
-    if (!user) {
+    // If Cognito fails, try admin authentication (for migration period)
+    if (!authResult.success && authResult.error === 'User not found') {
+      console.log('User not found in Cognito, trying admin authentication...');
+      if (email) {
+        authResult = await adminSignIn(email, password);
+      } else {
+        authResult = await adminSignIn(username, password);
+      }
+    }
+
+    if (!authResult.success) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { error: authResult.error || 'Invalid credentials' },
         { status: 401 }
       );
     }
 
-    // Create a simple session token (in real app, use JWT)
-    const sessionToken = `session_${user.id}_${Date.now()}`;
+    // Handle authentication challenges (like password change required)
+    if (authResult.challengeName) {
+      return NextResponse.json({
+        success: false,
+        error: authResult.error || 'Authentication challenge required',
+        challengeName: authResult.challengeName,
+        challengeParameters: authResult.challengeParameters
+      }, { status: 200 });
+    }
+
+    if (!authResult.user) {
+      return NextResponse.json(
+        { error: 'User data not available' },
+        { status: 500 }
+      );
+    }
+
+    // Get user progress data from DynamoDB
+    const dynamoUser = await getUserByEmail(authResult.user.email);
     
-    // Set cookie
+    // Create a session token with Cognito user ID
+    const sessionToken = `cognito_${authResult.user.id}_${Date.now()}`;
+    
+    // Set cookie with Cognito session
     cookies().set('session_token', sessionToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -46,12 +78,32 @@ export async function POST(request: NextRequest) {
       path: '/'
     });
 
-    // Return user data (without password)
-    const userWithoutPassword = user;
+    // Store Cognito access token in a separate cookie
+    if (authResult.session) {
+      cookies().set('cognito_token', authResult.session, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24, // 1 day (Cognito tokens expire)
+        path: '/'
+      });
+    }
+
+    // Combine Cognito user data with DynamoDB progress data
+    const userData = {
+      id: authResult.user.id,
+      email: authResult.user.email,
+      name: authResult.user.name,
+      role: authResult.user.role,
+      emailVerified: authResult.user.emailVerified,
+      status: authResult.user.status,
+      // Include DynamoDB progress data if available
+      progress: dynamoUser?.progress || null
+    };
     
     return NextResponse.json({
       success: true,
-      user: userWithoutPassword
+      user: userData
     });
 
   } catch (error) {

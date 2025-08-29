@@ -16,9 +16,13 @@ import {
   Terminal,
   Copy,
   CheckCircle2,
-  Trophy
+  Trophy,
+  Image,
+  X,
+  ZoomIn
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
+import Comments from '@/app/components/Comments';
 // Types for AWS data
 interface AWSService {
   id: string;
@@ -61,6 +65,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchTutorial() {
@@ -339,6 +344,28 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                                 </li>
                               ))}
                             </ol>
+                            
+                            {/* Screenshot Display */}
+                            {step.screenshot && (
+                              <div className="mt-4">
+                                <h5 className="font-medium text-gray-900 mb-2 flex items-center">
+                                  <Image className="h-4 w-4 mr-2 text-aws-orange" />
+                                  Visual Guide
+                                </h5>
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                  <div className="relative group cursor-pointer" onClick={() => setSelectedImage(step.screenshot)}>
+                                    <img
+                                      src={step.screenshot}
+                                      alt={`Screenshot for step ${stepIndex + 1}`}
+                                      className="w-full max-w-2xl h-auto rounded-lg border border-gray-200 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                                      <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -410,6 +437,8 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                                 <p>No CLI commands available for this step.</p>
                               </div>
                             )}
+                            
+                           
                           </div>
                         </div>
                       ))}
@@ -484,6 +513,55 @@ export default function TutorialPage({ params }: TutorialPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Comments Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Empty sidebar to maintain layout */}
+          <div className="lg:col-span-1"></div>
+          
+          {/* Comments in main content area */}
+          <div className="lg:col-span-3">
+            <Comments tutorialId={params.tutorialId} />
+          </div>
+        </div>
+      </div>
+
+      {/* Image Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              
+              {/* Image */}
+              <img
+                src={selectedImage}
+                alt="Screenshot"
+                className="w-full h-auto max-h-[90vh] object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 } 

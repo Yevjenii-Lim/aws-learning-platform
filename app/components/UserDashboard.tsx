@@ -246,11 +246,15 @@ export default function UserDashboard() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Learning Streak</p>
                 <p className="text-2xl font-bold text-gray-900">{stats.learningStreak} days</p>
-                {stats.learningStreak > 0 && (
+                {stats.learningStreak > 0 ? (
                   <p className="text-xs text-gray-500 mt-1">
                     {stats.learningStreak === 1 ? 'Keep it up!' : 
                      stats.learningStreak < 7 ? 'Great consistency!' :
                      stats.learningStreak < 30 ? 'Amazing dedication!' : 'Legendary streak!'}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">
+                    No recent activity. Start learning to build your streak!
                   </p>
                 )}
               </div>
@@ -260,7 +264,7 @@ export default function UserDashboard() {
       )}
 
       {/* Learning Streak Details */}
-      {stats && stats.learningStreak > 0 && (
+      {stats && (
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -274,39 +278,61 @@ export default function UserDashboard() {
           </div>
           
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
-                <span className="text-sm font-medium text-gray-900">Current Streak</span>
-              </div>
-              <span className="text-sm font-semibold text-purple-600">{stats.learningStreak} days</span>
-            </div>
-            
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
-                <span className="text-sm font-medium text-gray-900">Streak Milestones</span>
-              </div>
-              <div className="flex space-x-2">
-                {[1, 7, 30, 100].map(milestone => (
-                  <div
-                    key={milestone}
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                      stats.learningStreak >= milestone
-                        ? 'bg-purple-500 text-white'
-                        : 'bg-gray-200 text-gray-500'
-                    }`}
-                    title={`${milestone} day${milestone > 1 ? 's' : ''}`}
-                  >
-                    {milestone >= 100 ? '100' : milestone}
+            {stats.learningStreak > 0 ? (
+              <>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
+                    <span className="text-sm font-medium text-gray-900">Current Streak</span>
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
-              <strong>💡 Tip:</strong> Complete a tutorial or flashcard session each day to maintain your streak!
-            </div>
+                  <span className="text-sm font-semibold text-purple-600">{stats.learningStreak} days</span>
+                </div>
+                
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+                    <span className="text-sm font-medium text-gray-900">Streak Milestones</span>
+                  </div>
+                  <div className="flex space-x-2">
+                    {[1, 7, 30, 100].map(milestone => (
+                      <div
+                        key={milestone}
+                        className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                          stats.learningStreak >= milestone
+                            ? 'bg-purple-500 text-white'
+                            : 'bg-gray-200 text-gray-500'
+                        }`}
+                        title={`${milestone} day${milestone > 1 ? 's' : ''}`}
+                      >
+                        {milestone >= 100 ? '100' : milestone}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  <strong>💡 Tip:</strong> Complete a tutorial or flashcard session each day to maintain your streak!
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
+                    <span className="text-sm font-medium text-gray-900">Current Streak</span>
+                  </div>
+                  <span className="text-sm font-semibold text-gray-600">0 days</span>
+                </div>
+                
+                <div className="text-sm text-gray-600 bg-orange-50 p-3 rounded-lg border border-orange-200">
+                  <strong>🔥 Start Your Streak:</strong> Complete a tutorial or flashcard session today to begin building your learning streak!
+                </div>
+                
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
+                  <strong>💡 How it works:</strong> Your streak resets to 0 if you miss a day. Complete any learning activity daily to maintain your streak! The streak only counts consecutive days with activity.
+                </div>
+              </>
+            )}
             
             <div className="flex justify-center space-x-2 pt-2">
               <button

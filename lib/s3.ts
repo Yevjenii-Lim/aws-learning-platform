@@ -74,10 +74,27 @@ export async function uploadScreenshot(
       Body: imageBuffer,
       ContentType: CONTENT_TYPES.IMAGE_PNG,
       CacheControl: 'max-age=86400', // 24 hours cache
+      ACL: 'public-read', // Make the image publicly readable
     });
 
     await s3Client.send(command);
-    return `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    
+    // Try public URL first, fallback to signed URL if needed
+    const publicUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    
+    // Test if public URL works by trying to fetch it
+    try {
+      const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+      if (testResponse.ok) {
+        return publicUrl;
+      }
+    } catch (error) {
+      console.log('Public URL not accessible, using signed URL');
+    }
+    
+    // Fallback to signed URL
+    const signedUrl = await getSignedImageUrl(key, 86400); // 24 hours
+    return signedUrl;
   } catch (error) {
     console.error('Error uploading screenshot:', error);
     return null;

@@ -10,7 +10,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (credentials: { email?: string; username?: string; password: string }) => Promise<boolean>;
+  login: (credentials: { email?: string; username?: string; password: string }) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   isLoading: boolean;
 }
@@ -46,7 +46,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = async (credentials: { email?: string; username?: string; password: string }): Promise<boolean> => {
+  const login = async (credentials: { email?: string; username?: string; password: string }): Promise<{ success: boolean; error?: string }> => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -56,17 +56,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         body: JSON.stringify(credentials),
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.user) {
-          setUser(data.user);
-          return true;
-        }
+      const data = await response.json();
+
+      if (response.ok && data.success && data.user) {
+        setUser(data.user);
+        return { success: true };
+      } else {
+        // Return the error message from the API
+        return { 
+          success: false, 
+          error: data.error || 'Login failed' 
+        };
       }
-      return false;
     } catch (error) {
       console.error('Login failed:', error);
-      return false;
+      return { 
+        success: false, 
+        error: 'Network error. Please try again.' 
+      };
     }
   };
 

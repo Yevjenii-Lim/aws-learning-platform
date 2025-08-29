@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { signUp } from '@/lib/cognito';
+import { confirmForgotPassword } from '@/lib/cognito';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name, role = 'user' } = await request.json();
+    const { email, confirmationCode, newPassword } = await request.json();
 
-    // Validate required fields
-    if (!email || !password || !name) {
+    if (!email || !confirmationCode || !newPassword) {
       return NextResponse.json(
-        { error: 'Email, password, and name are required' },
+        { error: 'Email, confirmation code, and new password are required' },
         { status: 400 }
       );
     }
@@ -23,34 +22,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate password length (minimum 6 characters)
-    if (password.length < 6) {
+    if (newPassword.length < 6) {
       return NextResponse.json(
         { error: 'Password must be at least 6 characters long' },
         { status: 400 }
       );
     }
 
-    // Register user with Cognito
-    const result = await signUp(email, password, name, role);
+    // Confirm password reset with Cognito
+    const result = await confirmForgotPassword(email, confirmationCode, newPassword);
 
     if (result.success) {
       return NextResponse.json({
         success: true,
-        message: 'Registration successful! Please check your email for a confirmation code to verify your account.',
-        requiresVerification: true
+        message: 'Password reset successful. You can now log in with your new password.'
       });
     } else {
       return NextResponse.json(
-        { error: result.error || 'Registration failed' },
+        { error: result.error || 'Password reset failed' },
         { status: 400 }
       );
     }
 
   } catch (error) {
-    console.error('Registration error:', error);
+    console.error('Reset password error:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     );
   }
-} 
+}

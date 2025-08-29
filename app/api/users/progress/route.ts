@@ -1,16 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities } from '@/lib/users';
+import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities, getUserByEmail } from '@/lib/users';
+import { getUserByToken } from '@/lib/cognito';
 
-export async function POST(request: NextRequest) {
-  try {
+// Helper function to get user from either Cognito or legacy session
+async function getAuthenticatedUser() {
+  const cognitoToken = cookies().get('cognito_token')?.value;
+  let user = null;
+
+  if (cognitoToken) {
+    // Use Cognito authentication
+    const cognitoUser = await getUserByToken(cognitoToken);
+    if (cognitoUser) {
+      // Get user from DynamoDB using email instead of ID
+      user = await getUserByEmail(cognitoUser.email);
+      // Note: We don't create users here - they should be created during email confirmation
+    }
+  } else {
+    // Fallback to legacy DynamoDB authentication
     const sessionToken = cookies().get('session_token')?.value;
 
     if (!sessionToken) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+      return null;
     }
 
     // Parse session token to get user ID
@@ -18,12 +29,19 @@ export async function POST(request: NextRequest) {
     const parts = sessionToken.split('_');
     // The user ID is parts[1] + '_' + parts[2] + '_' + parts[3] (e.g., "user_admin_001")
     const userId = parts.slice(1, -1).join('_');
-    
-    const user = await getUserById(userId);
+    user = await getUserById(userId);
+  }
+
+  return user;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await getAuthenticatedUser();
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid session' },
+        { error: 'Not authenticated' },
         { status: 401 }
       );
     }
@@ -92,25 +110,11 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionToken = cookies().get('session_token')?.value;
-
-    if (!sessionToken) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
-    }
-
-    // Parse session token to get user ID
-    // Format: session_${user.id}_${timestamp}
-    const parts = sessionToken.split('_');
-    // The user ID is parts[1] + '_' + parts[2] + '_' + parts[3] (e.g., "user_admin_001")
-    const userId = parts.slice(1, -1).join('_');
-    const user = await getUserById(userId);
+    const user = await getAuthenticatedUser();
 
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid session' },
+        { error: 'Not authenticated' },
         { status: 401 }
       );
     }

@@ -15,13 +15,17 @@ import {
   BookOpen,
   ArrowLeft,
   Copy,
-  ExternalLink
+  ExternalLink,
+  Image,
+  X,
+  ZoomIn
 } from 'lucide-react';
 import { AWSService, AWSTutorial, AWSStep } from '../../../../../lib/dynamodb';
 import Link from 'next/link';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import ClientOnly from '../../../../components/ClientOnly';
+import Comments from '../../../../components/Comments';
 
 interface CLIPageProps {
   params: {
@@ -36,6 +40,7 @@ export default function CLIPage({ params }: CLIPageProps) {
   const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
   const [service, setService] = useState<AWSService | null>(null);
   const [tutorial, setTutorial] = useState<AWSTutorial | null>(null);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchTutorialData = async () => {
@@ -306,6 +311,28 @@ export default function CLIPage({ params }: CLIPageProps) {
                     </div>
                   </div>
 
+                  {/* Screenshot Display */}
+                  {currentStepData.screenshot && (
+                    <div className="mb-6">
+                      <h4 className="font-medium text-gray-900 mb-3 flex items-center">
+                        <Image className="h-5 w-5 mr-2 text-aws-orange" />
+                        Visual Reference
+                      </h4>
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <div className="relative group cursor-pointer" onClick={() => setSelectedImage(currentStepData.screenshot)}>
+                          <img
+                            src={currentStepData.screenshot}
+                            alt={`Screenshot for step ${currentStep + 1}`}
+                            className="w-full max-w-2xl h-auto rounded-lg border border-gray-200 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                            <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Command Explanation */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                     <div className="flex items-start">
@@ -379,6 +406,55 @@ export default function CLIPage({ params }: CLIPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Comments Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Empty sidebar to maintain layout */}
+          <div className="lg:col-span-1"></div>
+          
+          {/* Comments in main content area */}
+          <div className="lg:col-span-3">
+            <Comments tutorialId={params.tutorialId} />
+          </div>
+        </div>
+      </div>
+
+      {/* Image Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+            onClick={() => setSelectedImage(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="absolute top-4 right-4 z-10 p-2 bg-black bg-opacity-50 text-white rounded-full hover:bg-opacity-75 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+              
+              {/* Image */}
+              <img
+                src={selectedImage}
+                alt="Screenshot"
+                className="w-full h-auto max-h-[90vh] object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 } 

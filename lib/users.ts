@@ -471,7 +471,7 @@ export async function getUserStats(email: string, id: string): Promise<{
   achievements: string[];
 } | null> {
   try {
-    const user = await getUserByEmail(email);
+    const user = await getUserById(id);
     if (!user) return null;
 
     const { progress } = user;
@@ -499,12 +499,27 @@ export async function getUserStats(email: string, id: string): Promise<{
       totalTimeSpent = progress.totalTimeSpent;
     }
 
+    // Recalculate learning streak to ensure it's up-to-date
+    const recalculatedStreak = calculateLearningStreak(progress.recentActivity);
+    
+    // Update the stored streak if it's different
+    if (recalculatedStreak !== progress.learningStreak) {
+      await client.send(new UpdateItemCommand({
+        TableName: TABLE_NAME,
+        Key: marshall({ email, id }),
+        UpdateExpression: 'SET progress.learningStreak = :learningStreak',
+        ExpressionAttributeValues: marshall({
+          ':learningStreak': recalculatedStreak
+        })
+      }));
+    }
+
     return {
       totalTutorials: Array.isArray(progress.completedTutorials) ? progress.completedTutorials.length : 0,
       totalQuizScores: quizScores.length,
       averageQuizScore: Math.round(averageQuizScore * 100) / 100,
       totalTimeSpent,
-      learningStreak: progress.learningStreak,
+      learningStreak: recalculatedStreak,
       achievements: progress.achievements
     };
   } catch (error) {

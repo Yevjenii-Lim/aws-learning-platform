@@ -1,24 +1,53 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getUserById, getUserStats } from '@/lib/users';
+import { getUserById, getUserStats, getUserByEmail } from '@/lib/users';
+import { getUserByToken } from '@/lib/cognito';
 
 export async function GET(request: NextRequest) {
   try {
-    const sessionToken = cookies().get('session_token')?.value;
+    const cognitoToken = cookies().get('cognito_token')?.value;
+    let user = null;
 
-    if (!sessionToken) {
-      return NextResponse.json(
-        { error: 'Not authenticated' },
-        { status: 401 }
-      );
+    if (cognitoToken) {
+      const cognitoUser = await getUserByToken(cognitoToken);
+      if (cognitoUser) {
+        user = await getUserByEmail(cognitoUser.email);
+        if (!user) {
+          // User doesn't exist in DynamoDB yet, return empty stats
+          return NextResponse.json({
+            success: true,
+            stats: {
+              totalTutorials: 0,
+              totalQuizScores: 0,
+              averageQuizScore: 0,
+              totalTimeSpent: 0,
+              learningStreak: 0,
+              achievements: []
+            },
+            user: {
+              name: cognitoUser.name,
+              email: cognitoUser.email,
+              role: cognitoUser.role,
+              lastLogin: new Date().toISOString(),
+              createdAt: new Date().toISOString()
+            }
+          });
+        }
+      }
+    } else {
+      const sessionToken = cookies().get('session_token')?.value;
+
+      if (!sessionToken) {
+        return NextResponse.json(
+          { error: 'Not authenticated' },
+          { status: 401 }
+        );
+      }
+
+      const parts = sessionToken.split('_');
+      const userId = parts.slice(1, -1).join('_');
+      user = await getUserById(userId);
     }
-
-    // Parse session token to get user ID
-    // Format: session_${user.id}_${timestamp}
-    const parts = sessionToken.split('_');
-    // The user ID is parts[1] + '_' + parts[2] + '_' + parts[3] (e.g., "user_admin_001")
-    const userId = parts.slice(1, -1).join('_');
-    const user = await getUserById(userId);
 
     if (!user) {
       return NextResponse.json(
