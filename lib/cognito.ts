@@ -209,7 +209,7 @@ export async function adminSignIn(username: string, password: string): Promise<A
 }
 
 // Get user by username
-export async function getUserByUsername(username: string): Promise<CognitoUser | null> {
+export async function getUserByUsername(username: string): Promise<CognitoUser | undefined> {
   try {
     console.log('🔍 Getting user by username:', username);
     
@@ -243,15 +243,15 @@ export async function getUserByUsername(username: string): Promise<CognitoUser |
     }
     
     console.log('🔍 No user found');
-    return null;
+    return undefined;
   } catch (error) {
     console.error('🔍 Get user error:', error);
-    return null;
+    return undefined;
   }
 }
 
 // Get user by access token
-export async function getUserByToken(accessToken: string): Promise<CognitoUser | null> {
+export async function getUserByToken(accessToken: string): Promise<CognitoUser | undefined> {
   try {
     const command = new GetUserCommand({
       AccessToken: accessToken,
@@ -271,10 +271,10 @@ export async function getUserByToken(accessToken: string): Promise<CognitoUser |
       };
     }
     
-    return null;
+    return undefined;
   } catch (error) {
     console.error('Get user by token error:', error);
-    return null;
+    return undefined;
   }
 }
 
