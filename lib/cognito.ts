@@ -32,8 +32,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Only throw error in production if variables are missing
-if (process.env.NODE_ENV === 'production' && (!process.env.COGNITO_USER_POOL_ID || !process.env.COGNITO_CLIENT_ID)) {
-  throw new Error('Cognito configuration missing. Please set COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID environment variables.');
+// But allow build process to continue
+if (process.env.NODE_ENV === 'production' && 
+    typeof window === 'undefined' && // Server-side only
+    !process.env.COGNITO_USER_POOL_ID && 
+    !process.env.COGNITO_CLIENT_ID) {
+  console.warn('Cognito configuration missing. Please set COGNITO_USER_POOL_ID and COGNITO_CLIENT_ID environment variables.');
+  // Don't throw error during build process
 }
 
 export interface CognitoUser {
