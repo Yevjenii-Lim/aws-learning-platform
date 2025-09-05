@@ -23,7 +23,7 @@ console.log('S3 Client initialized with config:', {
   nodeEnv: process.env.NODE_ENV
 });
 
-export const BUCKET_NAME = process.env.AWS_S3_BUCKET || 'aws-learning-platform-content';
+export const BUCKET_NAME = process.env.AWS_S3_BUCKET || 'aws-learning-platform-content-1755358162';
 
 // Content types
 export const CONTENT_TYPES = {
