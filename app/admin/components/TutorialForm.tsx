@@ -132,12 +132,17 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
   };
 
   const updateStep = (stepIndex: number, field: string, value: any) => {
-    setFormData(prev => ({
-      ...prev,
-      steps: prev.steps.map((step, index) => 
+    console.log(`Updating step ${stepIndex}, field: ${field}, value:`, value);
+    setFormData(prev => {
+      const newSteps = prev.steps.map((step, index) => 
         index === stepIndex ? { ...step, [field]: value } : step
-      )
-    }));
+      );
+      console.log('Updated steps:', newSteps);
+      return {
+        ...prev,
+        steps: newSteps
+      };
+    });
   };
 
   const addArrayItem = (stepIndex: number, field: 'consoleInstructions' | 'cliCommands' | 'tips', value: string) => {
@@ -216,10 +221,17 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
       });
 
       const result = await response.json();
+      console.log('Screenshot upload response:', result);
 
       if (result.success) {
-        updateStep(stepIndex, 'screenshot', result.imageUrl);
+        console.log('Upload successful, updating step with imageUrl:', result.imageUrl);
+        // Add cache-busting parameter to force image refresh
+        const imageUrlWithCacheBuster = `${result.imageUrl}?t=${Date.now()}`;
+        console.log('Image URL with cache buster:', imageUrlWithCacheBuster);
+        updateStep(stepIndex, 'screenshot', imageUrlWithCacheBuster);
+        alert('Screenshot uploaded successfully!');
       } else {
+        console.error('Upload failed:', result.error);
         alert('Failed to upload screenshot: ' + result.error);
       }
     } catch (error) {
@@ -510,8 +522,10 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
             </div>
 
             <div className="space-y-4">
-              {formData.steps.map((step, stepIndex) => (
-                <div key={stepIndex} className="border border-gray-200 rounded-lg p-4">
+              {formData.steps.map((step, stepIndex) => {
+                console.log(`Rendering step ${stepIndex}:`, step);
+                return (
+                  <div key={stepIndex} className="border border-gray-200 rounded-lg p-4">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium text-gray-900">Step {step.id}</h4>
                     <div className="flex space-x-2">
@@ -708,9 +722,12 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                       {step.screenshot ? (
                         <div className="relative">
                           <img
+                            key={step.screenshot} // Force re-render when URL changes
                             src={step.screenshot}
                             alt={`Screenshot for step ${step.id}`}
                             className="w-full max-w-md h-auto rounded-lg border border-gray-300"
+                            onLoad={() => console.log('Image loaded:', step.screenshot)}
+                            onError={() => console.log('Image failed to load:', step.screenshot)}
                           />
                           <button
                             type="button"
@@ -761,7 +778,8 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 

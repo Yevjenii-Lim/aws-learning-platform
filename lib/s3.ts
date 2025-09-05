@@ -5,8 +5,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
   credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
   },
 });
 
@@ -66,6 +66,12 @@ export async function uploadScreenshot(
   imageBuffer: Buffer
 ): Promise<string | null> {
   try {
+    // Check if AWS credentials are available
+    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+      console.error('AWS credentials not configured');
+      throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.');
+    }
+
     const key = `screenshots/${serviceId}/${tutorialId}/step-${stepId}.png`;
     
     const command = new PutObjectCommand({
@@ -78,22 +84,28 @@ export async function uploadScreenshot(
     });
 
     await s3Client.send(command);
+    console.log('S3 upload command executed successfully');
     
     // Try public URL first, fallback to signed URL if needed
     const publicUrl = `https://${BUCKET_NAME}.s3.amazonaws.com/${key}`;
+    console.log('Generated public URL:', publicUrl);
     
     // Test if public URL works by trying to fetch it
     try {
       const testResponse = await fetch(publicUrl, { method: 'HEAD' });
+      console.log('Public URL test response:', testResponse.status);
       if (testResponse.ok) {
+        console.log('Using public URL:', publicUrl);
         return publicUrl;
       }
     } catch (error) {
-      console.log('Public URL not accessible, using signed URL');
+      console.log('Public URL not accessible, using signed URL:', error);
     }
     
     // Fallback to signed URL
+    console.log('Generating signed URL for key:', key);
     const signedUrl = await getSignedImageUrl(key, 86400); // 24 hours
+    console.log('Generated signed URL:', signedUrl);
     return signedUrl;
   } catch (error) {
     console.error('Error uploading screenshot:', error);

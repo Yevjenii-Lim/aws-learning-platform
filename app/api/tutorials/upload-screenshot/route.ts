@@ -39,15 +39,19 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Upload to S3
+    console.log('Uploading to S3 with params:', { serviceId, tutorialId, stepId });
     const imageUrl = await uploadScreenshot(serviceId, tutorialId, parseInt(stepId), buffer);
+    console.log('S3 upload result:', imageUrl);
 
     if (!imageUrl) {
+      console.error('S3 upload failed - no imageUrl returned');
       return NextResponse.json(
         { success: false, error: 'Failed to upload image' },
         { status: 500 }
       );
     }
 
+    console.log('Screenshot upload successful, returning:', { success: true, imageUrl });
     return NextResponse.json({
       success: true,
       imageUrl,
