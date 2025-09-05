@@ -125,15 +125,19 @@ export async function uploadScreenshot(
     return signedUrl;
   } catch (error) {
     console.error('Error uploading screenshot:', error);
-    console.error('Error details:', {
-      name: error.name,
-      message: error.message,
-      code: error.code,
-      statusCode: error.statusCode,
+    
+    // Safely extract error details
+    const errorDetails = {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      code: (error as any)?.code || 'Unknown',
+      statusCode: (error as any)?.statusCode || 'Unknown',
       region: process.env.AWS_REGION,
       bucket: BUCKET_NAME,
       nodeEnv: process.env.NODE_ENV
-    });
+    };
+    
+    console.error('Error details:', errorDetails);
     return null;
   }
 }
