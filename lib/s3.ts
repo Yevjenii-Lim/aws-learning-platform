@@ -2,16 +2,25 @@ import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } fr
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // Initialize S3 client
-const s3Client = new S3Client({
+const s3Config: any = {
   region: process.env.AWS_REGION || 'us-east-1',
-  // In production (Amplify), AWS SDK will automatically use IAM role credentials
-  // In development, it will use environment variables if available
-  ...(process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    }
-  } : {}),
+};
+
+// Only add credentials in development if they exist
+if (process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+  s3Config.credentials = {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  };
+}
+
+const s3Client = new S3Client(s3Config);
+
+// Test S3 client initialization
+console.log('S3 Client initialized with config:', {
+  region: s3Config.region,
+  hasCredentials: !!s3Config.credentials,
+  nodeEnv: process.env.NODE_ENV
 });
 
 export const BUCKET_NAME = process.env.AWS_S3_BUCKET || 'aws-learning-platform-content';
@@ -116,6 +125,15 @@ export async function uploadScreenshot(
     return signedUrl;
   } catch (error) {
     console.error('Error uploading screenshot:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      statusCode: error.statusCode,
+      region: process.env.AWS_REGION,
+      bucket: BUCKET_NAME,
+      nodeEnv: process.env.NODE_ENV
+    });
     return null;
   }
 }
