@@ -4,10 +4,14 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 // Initialize S3 client
 const s3Client = new S3Client({
   region: process.env.AWS_REGION || 'us-east-1',
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-  },
+  // In production (Amplify), AWS SDK will automatically use IAM role credentials
+  // In development, it will use environment variables if available
+  ...(process.env.NODE_ENV === 'development' && process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY ? {
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+    }
+  } : {}),
 });
 
 export const BUCKET_NAME = process.env.AWS_S3_BUCKET || 'aws-learning-platform-content';
@@ -66,10 +70,13 @@ export async function uploadScreenshot(
   imageBuffer: Buffer
 ): Promise<string | null> {
   try {
-    // Check if AWS credentials are available
-    if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      console.error('AWS credentials not configured');
-      throw new Error('AWS credentials not configured. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables.');
+    // Log credential method being used
+    if (process.env.NODE_ENV === 'production') {
+      console.log('🔐 Using IAM role credentials for S3 upload (production)');
+    } else if (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) {
+      console.log('🔐 Using environment variable credentials for S3 upload (development)');
+    } else {
+      console.log('🔐 Using default credential chain for S3 upload');
     }
 
     const key = `screenshots/${serviceId}/${tutorialId}/step-${stepId}.png`;

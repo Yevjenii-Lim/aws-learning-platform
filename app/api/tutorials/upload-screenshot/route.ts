@@ -5,6 +5,13 @@ export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
+    // Log environment information
+    console.log('🌍 Environment:', process.env.NODE_ENV);
+    console.log('🔧 AWS Region:', process.env.AWS_REGION);
+    console.log('🪣 S3 Bucket:', process.env.AWS_S3_BUCKET);
+    console.log('🔑 Has Access Key:', !!process.env.AWS_ACCESS_KEY_ID);
+    console.log('🔑 Has Secret Key:', !!process.env.AWS_SECRET_ACCESS_KEY);
+    
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const serviceId = formData.get('serviceId') as string;
