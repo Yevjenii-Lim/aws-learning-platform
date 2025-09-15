@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Trophy, 
@@ -40,7 +40,7 @@ interface QuizResult {
   }>;
 }
 
-export default function QuizResultsPage() {
+function QuizResultsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [result, setResult] = useState<QuizResult | null>(null);
@@ -351,5 +351,21 @@ export default function QuizResultsPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function QuizResultsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">📊</div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Loading Results</h1>
+          <p className="text-gray-600">Please wait...</p>
+        </div>
+      </div>
+    }>
+      <QuizResultsContent />
+    </Suspense>
   );
 }

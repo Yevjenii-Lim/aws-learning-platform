@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { getUserById, getUserStats, getUserByEmail } from '@/lib/users';
 import { getUserByToken } from '@/lib/cognito';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const cognitoToken = cookies().get('cognito_token')?.value;

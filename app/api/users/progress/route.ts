@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addQuizActivity, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities, getUserByEmail } from '@/lib/users';
 import { getUserByToken } from '@/lib/cognito';
 
+export const dynamic = 'force-dynamic';
+
 // Helper function to get user from either Cognito or legacy session
 async function getAuthenticatedUser() {
   const cognitoToken = cookies().get('cognito_token')?.value;

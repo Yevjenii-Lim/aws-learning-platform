@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { getUserByToken } from '@/lib/cognito';
 import { getUserByEmail } from '@/lib/users';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const sessionToken = cookies().get('session_token')?.value;
