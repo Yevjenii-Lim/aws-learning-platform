@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities, getUserByEmail } from '@/lib/users';
+import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addQuizActivity, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities, getUserByEmail } from '@/lib/users';
 import { getUserByToken } from '@/lib/cognito';
 
 // Helper function to get user from either Cognito or legacy session
@@ -61,6 +61,10 @@ export async function POST(request: NextRequest) {
       
       case 'update_quiz_score':
         success = await updateQuizScore(user.email, user.id, data.quizId, data.score);
+        break;
+      
+      case 'add_quiz_activity':
+        success = await addQuizActivity(user.email, user.id, data.category, data.score, data.totalQuestions);
         break;
       
       case 'add_learning_time':

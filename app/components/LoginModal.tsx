@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { X, Mail, Lock, User, RefreshCw, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import VerificationModal from './VerificationModal';
+import ForgotPasswordModal from './ForgotPasswordModal';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -18,6 +19,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
   const [error, setError] = useState('');
   const [showResendOption, setShowResendOption] = useState(false);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -142,7 +144,7 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
               </div>
             </div>
 
-            <div className="mb-6">
+            <div className="mb-4">
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                 Password
               </label>
@@ -158,6 +160,16 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
                   required
                 />
               </div>
+            </div>
+
+            <div className="mb-6 text-right">
+              <button
+                type="button"
+                onClick={() => setShowForgotPasswordModal(true)}
+                className="text-sm text-aws-orange hover:text-aws-orange-dark font-medium"
+              >
+                Forgot your password?
+              </button>
             </div>
 
             <button
@@ -239,6 +251,14 @@ export default function LoginModal({ isOpen, onClose, onSwitchToRegister }: Logi
           onClose={() => setShowVerificationModal(false)}
           email={emailOrUsername}
           onVerificationSuccess={handleVerificationSuccess}
+        />
+      )}
+
+      {showForgotPasswordModal && (
+        <ForgotPasswordModal
+          isOpen={showForgotPasswordModal}
+          onClose={() => setShowForgotPasswordModal(false)}
+          onBackToLogin={() => setShowForgotPasswordModal(false)}
         />
       )}
     </>

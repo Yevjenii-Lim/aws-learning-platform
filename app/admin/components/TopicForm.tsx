@@ -114,8 +114,7 @@ export default function TopicForm({ topic, onSave, onCancel }: TopicFormProps) {
 
     const topicData = {
       ...formData,
-      id: formData.id || `topic-${Date.now()}`,
-      serviceCount: formData.services.length
+      id: formData.id || `topic-${Date.now()}`
     };
 
     onSave(topicData);

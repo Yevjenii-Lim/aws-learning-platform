@@ -29,7 +29,7 @@ interface QuizQuestion {
   tags: string[];
 }
 
-const categories = ['all', 'networking', 'compute', 'storage', 'security', 'database', 'monitoring'];
+const categories = ['all', 'networking', 'compute', 'storage', 'security', 'database',];
 
 export default function QuizletPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -41,11 +41,27 @@ export default function QuizletPage() {
   const [error, setError] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
+  const [quizStartTime, setQuizStartTime] = useState<number | null>(null);
+  const [questionResults, setQuestionResults] = useState<Array<{
+    id: string;
+    question: string;
+    selectedAnswer: number;
+    correctAnswer: number;
+    isCorrect: boolean;
+    category: string;
+  }>>([]);
 
   // Fetch quiz questions on component mount
   useEffect(() => {
     fetchQuizQuestions();
   }, []);
+
+  // Start timer when quiz begins
+  useEffect(() => {
+    if (quizQuestions.length > 0 && !quizStartTime) {
+      setQuizStartTime(Date.now());
+    }
+  }, [quizQuestions, quizStartTime]);
 
   // Fetch quiz questions when category changes
   useEffect(() => {
@@ -71,6 +87,8 @@ export default function QuizletPage() {
         setSelectedAnswer(null);
         setShowExplanation(false);
         setScore(0);
+        setQuizStartTime(null);
+        setQuestionResults([]);
       } else {
         setError('Failed to load quiz questions');
       }
@@ -97,6 +115,8 @@ export default function QuizletPage() {
         setSelectedAnswer(null);
         setShowExplanation(false);
         setScore(0);
+        setQuizStartTime(null);
+        setQuestionResults([]);
       } else {
         setError('Failed to load quiz questions');
       }
@@ -114,9 +134,22 @@ export default function QuizletPage() {
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
     
-    if (answerIndex === currentQuestion.correctAnswer) {
+    const isCorrect = answerIndex === currentQuestion.correctAnswer;
+    if (isCorrect) {
       setScore(prev => prev + 1);
     }
+
+    // Store question result
+    const questionResult = {
+      id: currentQuestion.id,
+      question: currentQuestion.question,
+      selectedAnswer: answerIndex,
+      correctAnswer: currentQuestion.correctAnswer,
+      isCorrect,
+      category: currentQuestion.category
+    };
+    
+    setQuestionResults(prev => [...prev, questionResult]);
   };
 
   const nextQuestion = () => {
@@ -140,6 +173,51 @@ export default function QuizletPage() {
     setSelectedAnswer(null);
     setShowExplanation(false);
     setScore(0);
+    setQuizStartTime(null);
+    setQuestionResults([]);
+  };
+
+  const finishQuiz = () => {
+    if (!showExplanation) return;
+    
+    const timeSpent = quizStartTime ? Math.floor((Date.now() - quizStartTime) / 1000) : 0;
+    const percentage = Math.round((score / totalQuestions) * 100);
+    
+    // Calculate category breakdown
+    const categoryBreakdown: Record<string, { correct: number; total: number; percentage: number }> = {};
+    questionResults.forEach(result => {
+      if (!categoryBreakdown[result.category]) {
+        categoryBreakdown[result.category] = { correct: 0, total: 0, percentage: 0 };
+      }
+      categoryBreakdown[result.category].total++;
+      if (result.isCorrect) {
+        categoryBreakdown[result.category].correct++;
+      }
+    });
+    
+    // Calculate percentages for each category
+    Object.keys(categoryBreakdown).forEach(category => {
+      const stats = categoryBreakdown[category];
+      stats.percentage = Math.round((stats.correct / stats.total) * 100);
+    });
+    
+    const quizResult = {
+      score,
+      totalQuestions,
+      percentage,
+      category: selectedCategory,
+      timeSpent,
+      correctAnswers: score,
+      incorrectAnswers: totalQuestions - score,
+      categoryBreakdown,
+      questions: questionResults
+    };
+    
+    // Store results in session storage
+    sessionStorage.setItem('quizResults', JSON.stringify(quizResult));
+    
+    // Navigate to results page
+    window.location.href = `/games/quizlet/results?score=${score}&total=${totalQuestions}&category=${selectedCategory}&time=${timeSpent}`;
   };
 
   // Loading state
@@ -344,13 +422,18 @@ export default function QuizletPage() {
               <ChevronRight className="h-4 w-4 ml-2" />
             </button>
           ) : (
-            <Link
-              href="/games"
-              className="flex items-center px-4 py-2 rounded-md text-sm font-medium bg-green-600 text-white hover:bg-green-700"
+            <button
+              onClick={finishQuiz}
+              disabled={!showExplanation}
+              className={`flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                !showExplanation
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-green-600 text-white hover:bg-green-700'
+              }`}
             >
               Finish Quiz
               <Trophy className="h-4 w-4 ml-2" />
-            </Link>
+            </button>
           )}
         </div>
 

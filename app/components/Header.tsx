@@ -23,7 +23,7 @@ interface HeaderProps {
 }
 
 export default function Header({
-  title = "AWS Learning Platform",
+  title = "AWS Learning Hub",
   subtitle = "Interactive learning with visualizations and step-by-step guides",
   showBackButton = false,
   backUrl = "/",

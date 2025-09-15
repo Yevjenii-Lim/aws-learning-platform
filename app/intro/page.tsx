@@ -299,11 +299,11 @@ export default function IntroPage() {
             className="flex justify-center space-x-4"
           >
             <Link
-              href="/tutorial/compute/launch-instance"
+              href="/topics/topic-1757958990253"
               className="aws-button flex items-center px-6 py-3 text-lg"
             >
               <Play className="h-5 w-5 mr-2" />
-              Start Learning EC2
+              Create Free AWS Account
             </Link>
             <Link
               href="/games"

@@ -367,6 +367,51 @@ export async function updateQuizScore(
   }
 }
 
+export async function addQuizActivity(
+  email: string, 
+  id: string, 
+  category: string, 
+  score: number, 
+  totalQuestions: number
+): Promise<boolean> {
+  try {
+    // Get current user to access recentActivity
+    const currentUser = await getUserById(id);
+    if (!currentUser) {
+      console.error('User not found for quiz activity');
+      return false;
+    }
+
+    const currentRecentActivity = currentUser.progress?.recentActivity || [];
+    
+    const activityItem = {
+      type: 'quiz' as const,
+      title: `Quiz: ${category.charAt(0).toUpperCase() + category.slice(1)}`,
+      description: `Scored ${score}/${totalQuestions} (${Math.round((score / totalQuestions) * 100)}%)`,
+      timestamp: new Date().toISOString(),
+      link: '/games/quizlet'
+    };
+
+    // Keep only the last 20 activities to prevent the list from growing too large
+    const updatedActivities = [activityItem, ...currentRecentActivity].slice(0, 20);
+
+    await client.send(new UpdateItemCommand({
+      TableName: TABLE_NAME,
+      Key: marshall({ email, id }),
+      UpdateExpression: 'SET progress.lastActivity = :lastActivity, progress.recentActivity = :recentActivity',
+      ExpressionAttributeValues: marshall({
+        ':lastActivity': new Date().toISOString(),
+        ':recentActivity': updatedActivities
+      })
+    }));
+
+    return true;
+  } catch (error) {
+    console.error('Add quiz activity error:', error);
+    return false;
+  }
+}
+
 export async function addLearningTime(
   email: string, 
   id: string, 
