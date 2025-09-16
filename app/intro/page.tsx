@@ -299,7 +299,7 @@ export default function IntroPage() {
             className="flex justify-center space-x-4"
           >
             <Link
-              href="/topics/topic-1757958990253"
+              href="/tutorial/topic-1757958990253/tutorial-1757958998747"
               className="aws-button flex items-center px-6 py-3 text-lg"
             >
               <Play className="h-5 w-5 mr-2" />

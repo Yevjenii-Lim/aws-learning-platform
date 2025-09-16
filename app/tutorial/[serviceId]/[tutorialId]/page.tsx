@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import Comments from '@/app/components/Comments';
+import TutorialRating from '@/app/components/TutorialRating';
 // Types for AWS data
 interface AWSService {
   id: string;
@@ -520,8 +521,9 @@ export default function TutorialPage({ params }: TutorialPageProps) {
           {/* Empty sidebar to maintain layout */}
           <div className="lg:col-span-1"></div>
           
-          {/* Comments in main content area */}
-          <div className="lg:col-span-3">
+          {/* Rating and Comments in main content area */}
+          <div className="lg:col-span-3 space-y-8">
+            <TutorialRating tutorialId={params.tutorialId} serviceId={params.serviceId} />
             <Comments tutorialId={params.tutorialId} />
           </div>
         </div>

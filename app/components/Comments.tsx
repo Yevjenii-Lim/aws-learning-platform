@@ -38,7 +38,9 @@ export default function Comments({ tutorialId }: CommentsProps) {
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
 
   // Fetch comments
   const fetchComments = async () => {
@@ -103,6 +105,41 @@ export default function Comments({ tutorialId }: CommentsProps) {
       setError('Failed to add comment');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  // Delete comment
+  const handleDeleteComment = async (commentId: string) => {
+    if (!user) {
+      setError('Please log in to delete comments');
+      return;
+    }
+
+    try {
+      setDeleting(commentId);
+      setError(null);
+      setShowDeleteModal(null);
+
+      const response = await fetch(`/api/tutorials/${tutorialId}/comments`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ commentId }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setComments(prev => prev.filter(comment => comment.id !== commentId));
+      } else {
+        setError(result.error || 'Failed to delete comment');
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+      setError('Failed to delete comment');
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -256,16 +293,23 @@ export default function Comments({ tutorialId }: CommentsProps) {
                           {comment.likes.length} {comment.likes.length === 1 ? 'like' : 'likes'}
                         </button>
                         
-                        {user && comment.userId === user.id && (
+                        {user && (comment.userId === user.id || user.role === 'admin') && (
                           <button
-                            className="flex items-center text-sm text-gray-500 hover:text-red-600 transition-colors"
-                            onClick={() => {
-                              // TODO: Implement delete functionality
-                              console.log('Delete comment:', comment.id);
-                            }}
+                            className="flex items-center text-sm text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+                            onClick={() => setShowDeleteModal(comment.id)}
+                            disabled={deleting === comment.id}
                           >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete
+                            {deleting === comment.id ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-1"></div>
+                                Deleting...
+                              </>
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </>
+                            )}
                           </button>
                         )}
                       </div>
@@ -296,6 +340,40 @@ export default function Comments({ tutorialId }: CommentsProps) {
               Log In to Comment
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+          >
+            <div className="text-center">
+              <div className="text-6xl mb-4">🗑️</div>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Delete Comment</h2>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to delete this comment? This action cannot be undone.
+              </p>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(null)}
+                  className="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleDeleteComment(showDeleteModal)}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
     </div>

@@ -1,6 +1,7 @@
 import { DynamoDBClient, GetItemCommand, PutItemCommand, UpdateItemCommand, QueryCommand, ScanCommand, DeleteItemCommand } from '@aws-sdk/client-dynamodb';
 import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import bcrypt from 'bcryptjs';
+import { getUserBadges, getNewlyEarnedBadges, Badge } from './badges';
 
 const client = new DynamoDBClient({ region: 'us-east-1' });
 const TABLE_NAME = 'aws-learning-users';
@@ -712,5 +713,79 @@ export async function addTestActivities(email: string, id: string, days: number)
   } catch (error) {
     console.error('Add test activities error:', error);
     return false;
+  }
+}
+
+// Badge-related functions
+export async function checkAndAwardBadges(
+  email: string, 
+  id: string, 
+  quizResult?: {
+    score: number;
+    totalQuestions: number;
+    category: string;
+    timeSpent: number;
+  }
+): Promise<{ newBadges: Badge[]; allBadges: Badge[] }> {
+  try {
+    const user = await getUserByEmail(email);
+    if (!user) {
+      return { newBadges: [], allBadges: [] };
+    }
+
+    // Get all badges user has earned
+    const allBadges = getUserBadges(user.progress, quizResult);
+    
+    // Get newly earned badges
+    const newBadges = getNewlyEarnedBadges(user.progress, quizResult);
+    
+    // Update user's achievements if there are new badges
+    if (newBadges.length > 0) {
+      const newAchievementIds = newBadges.map(badge => badge.id);
+      const updatedAchievements = [...user.progress.achievements, ...newAchievementIds];
+      
+      // Add achievement activities
+      const achievementActivities = newBadges.map(badge => ({
+        type: 'achievement' as const,
+        title: `🏆 Earned Badge: ${badge.name}`,
+        description: badge.description,
+        timestamp: new Date().toISOString(),
+        link: '/dashboard'
+      }));
+
+      const updatedActivities = [...user.progress.recentActivity, ...achievementActivities]
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .slice(0, 50); // Keep only the 50 most recent activities
+
+      await client.send(new UpdateItemCommand({
+        TableName: TABLE_NAME,
+        Key: marshall({ email, id }),
+        UpdateExpression: 'SET progress.achievements = :achievements, progress.recentActivity = :recentActivity, progress.lastActivity = :lastActivity',
+        ExpressionAttributeValues: marshall({
+          ':achievements': updatedAchievements,
+          ':recentActivity': updatedActivities,
+          ':lastActivity': new Date().toISOString()
+        })
+      }));
+    }
+
+    return { newBadges, allBadges };
+  } catch (error) {
+    console.error('Check and award badges error:', error);
+    return { newBadges: [], allBadges: [] };
+  }
+}
+
+export async function getUserBadgesWithDetails(email: string, id: string): Promise<Badge[]> {
+  try {
+    const user = await getUserByEmail(email);
+    if (!user) {
+      return [];
+    }
+
+    return getUserBadges(user.progress);
+  } catch (error) {
+    console.error('Get user badges error:', error);
+    return [];
   }
 } 

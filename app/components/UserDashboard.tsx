@@ -16,6 +16,17 @@ import {
   ChevronUp
 } from 'lucide-react';
 
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  rarity: string;
+  unlockedAt?: string;
+}
+
 interface UserStats {
   totalTutorials: number;
   totalQuizScores: number;
@@ -50,6 +61,7 @@ export default function UserDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<UserStats | null>(null);
   const [progress, setProgress] = useState<UserProgress | null>(null);
+  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAllActivities, setShowAllActivities] = useState(false);
   const [recalculatingStreak, setRecalculatingStreak] = useState(false);
@@ -63,9 +75,14 @@ export default function UserDashboard() {
 
   const fetchUserData = async () => {
     try {
-      const [statsResponse, progressResponse] = await Promise.all([
+      const [statsResponse, progressResponse, badgesResponse] = await Promise.all([
         fetch('/api/users/stats'),
-        fetch('/api/users/progress')
+        fetch('/api/users/progress'),
+        fetch('/api/users/progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'get_badges', data: {} })
+        })
       ]);
 
       if (statsResponse.ok) {
@@ -76,6 +93,11 @@ export default function UserDashboard() {
       if (progressResponse.ok) {
         const progressData = await progressResponse.json();
         setProgress(progressData.progress);
+      }
+
+      if (badgesResponse.ok) {
+        const badgesData = await badgesResponse.json();
+        setBadges(badgesData.badges || []);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -470,39 +492,59 @@ export default function UserDashboard() {
         )}
       </div>
 
-      {/* Achievements */}
-      {stats?.achievements && stats.achievements.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Achievements</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {stats.achievements.map((achievement, index) => (
-              <div key={index} className="flex items-center p-3 bg-yellow-50 rounded-lg">
-                <Award className="h-5 w-5 text-yellow-600 mr-3" />
-                <span className="text-sm font-medium text-gray-900">{achievement}</span>
+      {/* Badges & Achievements */}
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <Award className="h-5 w-5 mr-2 text-yellow-600" />
+          Badges & Achievements ({badges.length})
+        </h3>
+        {badges.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {badges.map((badge) => (
+              <div 
+                key={badge.id} 
+                className={`p-4 rounded-lg border-2 transition-all hover:scale-105 ${
+                  badge.rarity === 'legendary' ? 'border-yellow-400 bg-gradient-to-br from-yellow-50 to-yellow-100' :
+                  badge.rarity === 'epic' ? 'border-purple-400 bg-gradient-to-br from-purple-50 to-purple-100' :
+                  badge.rarity === 'rare' ? 'border-blue-400 bg-gradient-to-br from-blue-50 to-blue-100' :
+                  'border-gray-400 bg-gradient-to-br from-gray-50 to-gray-100'
+                }`}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl flex-shrink-0">{badge.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-gray-900 text-sm mb-1">{badge.name}</h4>
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-2">{badge.description}</p>
+                    <div className="flex items-center justify-between">
+                      <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
+                        badge.rarity === 'legendary' ? 'bg-yellow-200 text-yellow-800' :
+                        badge.rarity === 'epic' ? 'bg-purple-200 text-purple-800' :
+                        badge.rarity === 'rare' ? 'bg-blue-200 text-blue-800' :
+                        'bg-gray-200 text-gray-800'
+                      }`}>
+                        {badge.rarity.toUpperCase()}
+                      </span>
+                      <span className="text-xs text-gray-500 capitalize">{badge.category}</span>
+                    </div>
+                    {badge.unlockedAt && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Earned {new Date(badge.unlockedAt).toLocaleDateString()}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:border-aws-orange hover:bg-orange-50 transition-colors">
-            <Play className="h-5 w-5 mr-2 text-aws-orange" />
-            <span className="font-medium">Continue Learning</span>
-          </button>
-          <button className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:border-aws-orange hover:bg-orange-50 transition-colors">
-            <Trophy className="h-5 w-5 mr-2 text-aws-orange" />
-            <span className="font-medium">Take Quiz</span>
-          </button>
-          <button className="flex items-center justify-center p-4 border border-gray-200 rounded-lg hover:border-aws-orange hover:bg-orange-50 transition-colors">
-            <BookOpen className="h-5 w-5 mr-2 text-aws-orange" />
-            <span className="font-medium">View Progress</span>
-          </button>
-        </div>
+        ) : (
+          <div className="text-center py-8">
+            <div className="text-4xl mb-2">🏆</div>
+            <p className="text-gray-500 mb-2">No badges earned yet</p>
+            <p className="text-sm text-gray-400">Complete quizzes and tutorials to earn your first badge!</p>
+          </div>
+        )}
       </div>
+
     </div>
   );
 } 

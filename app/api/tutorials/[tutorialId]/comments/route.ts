@@ -177,3 +177,130 @@ export async function POST(
     );
   }
 }
+
+// Delete a comment
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { tutorialId: string } }
+) {
+  try {
+    const { tutorialId } = params;
+    const { commentId } = await request.json();
+
+    if (!commentId) {
+      return NextResponse.json(
+        { success: false, error: 'Comment ID is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get user from session
+    const sessionToken = cookies().get('session_token')?.value;
+    
+    if (!sessionToken) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Verify session and get user info
+    let user;
+    
+    // Check if this is a Cognito session
+    if (sessionToken.startsWith('cognito_')) {
+      // Parse Cognito session token
+      const parts = sessionToken.split('_');
+      const cognitoUserId = parts[1];
+      
+      // Get Cognito access token
+      const cognitoToken = cookies().get('cognito_token')?.value;
+      
+      if (cognitoToken) {
+        // Verify token with Cognito
+        const cognitoUser = await getUserByToken(cognitoToken);
+        
+        if (cognitoUser) {
+          // Get user progress data from DynamoDB
+          const dynamoUser = await getUserByEmail(cognitoUser.email);
+          
+          user = {
+            id: cognitoUser.id,
+            email: cognitoUser.email,
+            name: cognitoUser.name,
+            role: cognitoUser.role,
+            emailVerified: cognitoUser.emailVerified,
+            status: cognitoUser.status,
+            progress: dynamoUser?.progress || null
+          };
+        }
+      }
+    } else {
+      // Legacy DynamoDB session (for migration period)
+      const parts = sessionToken.split('_');
+      const userId = parts.slice(1, -1).join('_');
+      
+      // Try to get user from DynamoDB
+      const dynamoUser = await getUserByEmail(userId);
+      
+      if (dynamoUser) {
+        user = dynamoUser;
+      }
+    }
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid session' },
+        { status: 401 }
+      );
+    }
+
+    // First, get the comment to verify ownership
+    const getCommentResult = await dynamoDB.send(new QueryCommand({
+      TableName: COMMENTS_TABLE,
+      KeyConditionExpression: 'tutorialId = :tutorialId AND id = :commentId',
+      ExpressionAttributeValues: {
+        ':tutorialId': tutorialId,
+        ':commentId': commentId
+      }
+    }));
+
+    const comment = getCommentResult.Items?.[0] as Comment;
+
+    if (!comment) {
+      return NextResponse.json(
+        { success: false, error: 'Comment not found' },
+        { status: 404 }
+      );
+    }
+
+    // Check if user owns the comment or is an admin
+    if (comment.userId !== user.id && user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Unauthorized to delete this comment' },
+        { status: 403 }
+      );
+    }
+
+    // Delete the comment
+    await dynamoDB.send(new DeleteCommand({
+      TableName: COMMENTS_TABLE,
+      Key: {
+        tutorialId: tutorialId,
+        id: commentId
+      }
+    }));
+
+    return NextResponse.json({
+      success: true,
+      message: 'Comment deleted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error deleting comment:', error);
+    return NextResponse.json(
+      { success: false, error: 'Failed to delete comment' },
+      { status: 500 }
+    );
+  }
+}

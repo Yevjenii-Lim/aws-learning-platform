@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addQuizActivity, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities, getUserByEmail } from '@/lib/users';
+import { getUserById, completeTutorial, completeFlashcards, updateQuizScore, addQuizActivity, addLearningTime, updateUserProgress, updateLearningStreak, addTestActivities, getUserByEmail, checkAndAwardBadges, getUserBadgesWithDetails } from '@/lib/users';
 import { getUserByToken } from '@/lib/cognito';
 
 export const dynamic = 'force-dynamic';
@@ -85,6 +85,23 @@ export async function POST(request: NextRequest) {
         // Add test activities for streak testing (for development only)
         success = await addTestActivities(user.email, user.id, data.days);
         break;
+      
+      case 'check_badges':
+        // Check and award badges after quiz completion
+        const badgeResult = await checkAndAwardBadges(user.email, user.id, data.quizResult);
+        return NextResponse.json({
+          success: true,
+          newBadges: badgeResult.newBadges,
+          allBadges: badgeResult.allBadges
+        });
+      
+      case 'get_badges':
+        // Get user's badges with details
+        const badges = await getUserBadgesWithDetails(user.email, user.id);
+        return NextResponse.json({
+          success: true,
+          badges
+        });
       
       default:
         return NextResponse.json(

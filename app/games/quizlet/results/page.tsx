@@ -40,6 +40,16 @@ interface QuizResult {
   }>;
 }
 
+interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  category: string;
+  rarity: string;
+}
+
 function QuizResultsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -47,6 +57,8 @@ function QuizResultsContent() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [newBadges, setNewBadges] = useState<Badge[]>([]);
+  const [showBadgeModal, setShowBadgeModal] = useState(false);
 
   useEffect(() => {
     // Get quiz results from URL params or session storage
@@ -135,6 +147,35 @@ function QuizResultsContent() {
 
       if (!activityResponse.ok) {
         console.error('Failed to add quiz activity');
+      }
+
+      // Check for new badges
+      const badgeResponse = await fetch('/api/users/progress', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          action: 'check_badges',
+          data: {
+            quizResult: {
+              score: quizResult.score,
+              totalQuestions: quizResult.totalQuestions,
+              category: quizResult.category,
+              timeSpent: quizResult.timeSpent || 0
+            }
+          }
+        })
+      });
+
+      if (badgeResponse.ok) {
+        const badgeData = await badgeResponse.json();
+        if (badgeData.newBadges && badgeData.newBadges.length > 0) {
+          // Store new badges in session storage to show in UI
+          sessionStorage.setItem('newBadges', JSON.stringify(badgeData.newBadges));
+          setNewBadges(badgeData.newBadges);
+          setShowBadgeModal(true);
+        }
       }
     } catch (err) {
       console.error('Error saving quiz data:', err);
@@ -350,6 +391,96 @@ function QuizResultsContent() {
           </motion.div>
         )}
       </div>
+
+      {/* Badge Modal */}
+      {showBadgeModal && newBadges.length > 0 && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowBadgeModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-md w-full p-6 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowBadgeModal(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="Close modal"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="text-center">
+              <div className="text-6xl mb-4">🏆</div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {newBadges.length === 1 ? 'Badge Earned!' : 'Badges Earned!'}
+              </h2>
+              <p className="text-gray-600 mb-6">
+                {newBadges.length === 1 
+                  ? 'Congratulations! You\'ve earned a new badge.' 
+                  : `Congratulations! You've earned ${newBadges.length} new badges.`
+                }
+              </p>
+              
+              <div className="space-y-4 mb-6">
+                {newBadges.map((badge, index) => (
+                  <motion.div
+                    key={badge.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className={`p-4 rounded-lg border-2 ${
+                      badge.rarity === 'legendary' ? 'border-yellow-400 bg-yellow-50' :
+                      badge.rarity === 'epic' ? 'border-purple-400 bg-purple-50' :
+                      badge.rarity === 'rare' ? 'border-blue-400 bg-blue-50' :
+                      'border-gray-400 bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="text-3xl">{badge.icon}</div>
+                      <div className="flex-1 text-left">
+                        <h3 className="font-semibold text-gray-900">{badge.name}</h3>
+                        <p className="text-sm text-gray-600">{badge.description}</p>
+                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full mt-1 ${
+                          badge.rarity === 'legendary' ? 'bg-yellow-200 text-yellow-800' :
+                          badge.rarity === 'epic' ? 'bg-purple-200 text-purple-800' :
+                          badge.rarity === 'rare' ? 'bg-blue-200 text-blue-800' :
+                          'bg-gray-200 text-gray-800'
+                        }`}>
+                          {badge.rarity.toUpperCase()}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowBadgeModal(false)}
+                  className="flex-1 px-6 py-3 bg-aws-orange text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                >
+                  Awesome! Continue Learning
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBadgeModal(false);
+                    window.location.href = '/dashboard';
+                  }}
+                  className="flex-1 px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                >
+                  View Dashboard
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
