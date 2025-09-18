@@ -6,6 +6,7 @@ import {
   ChevronLeft, 
   ChevronRight, 
   CheckCircle, 
+  CheckCircle2,
   Circle, 
   Monitor, 
   Lightbulb,
