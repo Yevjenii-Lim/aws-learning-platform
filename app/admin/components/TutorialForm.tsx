@@ -573,12 +573,12 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Description *
                       </label>
-                                             <textarea
+                      <textarea
                          value={step.description}
                          onChange={(e) => updateStep(stepIndex, 'description', e.target.value)}
                          rows={2}
                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-aws-orange focus:border-transparent text-gray-900"
-                         placeholder="Brief description of this step..."
+                         placeholder="Brief description of this step... (You can paste links - they'll be clickable)"
                          required
                        />
                     </div>
@@ -588,6 +588,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                   <div className="mb-4">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Console Instructions
+                      <span className="text-xs text-gray-500 ml-2">(Links will be clickable)</span>
                     </label>
                     <div className="space-y-2">
                       {step.consoleInstructions.map((instruction, index) => (
@@ -674,6 +675,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Tips
+                      <span className="text-xs text-gray-500 ml-2">(Links will be clickable)</span>
                     </label>
                     <div className="space-y-2">
                       {step.tips.map((tip, index) => (
@@ -768,7 +770,7 @@ export default function TutorialForm({ topics, services, onSave, onCancel, editi
                                 <Upload className="h-8 w-8 text-gray-400" />
                                 <div>
                                   <span className="text-sm font-medium text-aws-orange">Upload Screenshot</span>
-                                  <p className="text-xs text-gray-500">PNG, JPG up to 5MB</p>
+                                  <p className="text-xs text-gray-500">PNG, JPG supported</p>
                                 </div>
                               </>
                             )}

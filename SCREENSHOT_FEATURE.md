@@ -11,7 +11,7 @@ The tutorial system now supports optional screenshots for each step, making tuto
 1. **Upload Screenshots**: Add screenshots to any tutorial step during creation or editing
 2. **Image Preview**: See uploaded screenshots immediately in the form
 3. **Easy Removal**: Remove screenshots with a single click
-4. **File Validation**: Automatic validation for image files (PNG, JPG) and size limits (5MB max)
+4. **File Validation**: Automatic validation for image files (PNG, JPG) with no size limit
 
 ### For Users (Learners)
 
@@ -36,7 +36,7 @@ The tutorial system now supports optional screenshots for each step, making tuto
 
 #### File Requirements
 - **Formats**: PNG, JPG, JPEG
-- **Size Limit**: 5MB maximum
+- **Size Limit**: No limit enforced
 - **Storage**: AWS S3 bucket
 - **URL Structure**: `https://bucket.s3.amazonaws.com/screenshots/{serviceId}/{tutorialId}/step-{stepId}.png`
 
@@ -76,7 +76,7 @@ interface Step {
 ### For Screenshots
 - Use high-quality, clear images
 - Capture the most relevant part of the AWS console
-- Keep file sizes reasonable (under 2MB for faster loading)
+- Keep file sizes reasonable for faster loading and better user experience
 - Use consistent naming conventions
 - Test on different screen sizes
 
@@ -89,7 +89,7 @@ interface Step {
 ## Troubleshooting
 
 ### Common Issues
-1. **Upload Fails**: Check file size and format
+1. **Upload Fails**: Check file format and network connection
 2. **Image Not Displaying**: Verify S3 bucket permissions
 3. **Slow Loading**: Optimize image size before upload
 4. **Permission Errors**: Ensure AWS credentials are configured

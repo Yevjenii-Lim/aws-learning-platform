@@ -13,9 +13,6 @@ import {
   Target,
   BookOpen,
   ArrowLeft,
-  Terminal,
-  Copy,
-  CheckCircle2,
   Trophy,
   Image,
   X,
@@ -24,6 +21,7 @@ import {
 import { useAuth } from '@/app/contexts/AuthContext';
 import Comments from '@/app/components/Comments';
 import TutorialRating from '@/app/components/TutorialRating';
+import { renderTextWithLinks } from '@/lib/linkUtils';
 // Types for AWS data
 interface AWSService {
   id: string;
@@ -45,8 +43,7 @@ interface AWSTutorial {
   learningObjectives: string[];
 }
 import Link from 'next/link';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { tomorrow } from 'react-syntax-highlighter/dist/esm/styles/prism';
+// Removed SyntaxHighlighter imports - no longer needed without CLI commands
 
 interface TutorialPageProps {
   params: {
@@ -61,8 +58,8 @@ export default function TutorialPage({ params }: TutorialPageProps) {
   const [tutorial, setTutorial] = useState<AWSTutorial | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'console' | 'cli'>('console');
-  const [copiedCommand, setCopiedCommand] = useState<string | null>(null);
+  // Removed CLI tab functionality
+  // Removed copiedCommand state - no longer needed without CLI commands
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -128,15 +125,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
     fetchTutorial();
   }, [params.serviceId, params.tutorialId]);
 
-  const copyToClipboard = async (command: string) => {
-    try {
-      await navigator.clipboard.writeText(command);
-      setCopiedCommand(command);
-      setTimeout(() => setCopiedCommand(null), 2000);
-    } catch (err) {
-      console.error('Failed to copy command:', err);
-    }
-  };
+  // Removed copyToClipboard function - no longer needed without CLI commands
 
   const markAsCompleted = async () => {
     if (!user || !tutorial) return;
@@ -278,45 +267,16 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                   <p className="text-gray-600">{tutorial.description}</p>
                 </div>
 
-                {/* Tab Navigation */}
-                <div className="flex space-x-8">
-                  <button
-                    onClick={() => setActiveTab('console')}
-                    className={`flex items-center px-3 py-2 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === 'console'
-                        ? 'border-aws-orange text-aws-orange'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <Monitor className="h-4 w-4 mr-2" />
-                    Console Instructions
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('cli')}
-                    className={`flex items-center px-3 py-2 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === 'cli'
-                        ? 'border-aws-orange text-aws-orange'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    <Terminal className="h-4 w-4 mr-2" />
-                    CLI Commands
-                  </button>
+                {/* Tutorial Instructions Header */}
+                <div className="flex items-center">
+                  <Monitor className="h-5 w-5 mr-2 text-aws-orange" />
+                  <h3 className="text-lg font-semibold text-gray-900">Tutorial Instructions</h3>
                 </div>
               </div>
 
               {/* Tutorial Content */}
               <div className="p-6">
-                <AnimatePresence mode="wait">
-                  {activeTab === 'console' ? (
-                    <motion.div
-                      key="console"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-8"
-                    >
+                <div className="space-y-8">
                       {/* Console Instructions for all steps */}
                       {tutorial.steps.map((step, stepIndex) => (
                         <div key={stepIndex} className="border border-gray-200 rounded-lg p-6">
@@ -326,7 +286,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                             </div>
                             <div>
                               <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                              <p className="text-gray-600">{step.description}</p>
+                              <p className="text-gray-600">{renderTextWithLinks(step.description)}</p>
                             </div>
                           </div>
                           
@@ -341,7 +301,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                                   <span className="flex-shrink-0 w-6 h-6 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-3 mt-0.5">
                                     {index + 1}
                                   </span>
-                                  <span className="text-gray-700">{instruction}</span>
+                                  <span className="text-gray-700">{renderTextWithLinks(instruction)}</span>
                                 </li>
                               ))}
                             </ol>
@@ -358,7 +318,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                                     <img
                                       src={step.screenshot}
                                       alt={`Screenshot for step ${stepIndex + 1}`}
-                                      className="w-full max-w-2xl h-auto rounded-lg border border-gray-200 shadow-sm transition-transform duration-200 group-hover:scale-105"
+                                      className="w-full max-w-4xl h-auto rounded-lg border border-gray-200 shadow-sm transition-transform duration-200 group-hover:scale-105"
                                     />
                                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
                                       <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -370,82 +330,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                           </div>
                         </div>
                       ))}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="cli"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-8"
-                    >
-                      {/* CLI Commands for all steps */}
-                      {tutorial.steps.map((step, stepIndex) => (
-                        <div key={stepIndex} className="border border-gray-200 rounded-lg p-6">
-                          <div className="flex items-center mb-4">
-                            <div className="flex-shrink-0 w-8 h-8 bg-aws-orange text-white rounded-full flex items-center justify-center text-sm font-medium mr-4">
-                              {stepIndex + 1}
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">{step.title}</h3>
-                              <p className="text-gray-600">{step.description}</p>
-                            </div>
-                          </div>
-                          
-                          <div className="ml-12">
-                            <h4 className="font-semibold text-gray-900 flex items-center mb-3">
-                              <Terminal className="h-5 w-5 mr-2 text-aws-orange" />
-                              CLI Commands
-                            </h4>
-                            
-                            {step.cliCommands && step.cliCommands.length > 0 ? (
-                              <div className="space-y-4">
-                                {step.cliCommands.map((command: string, index: number) => (
-                                  <div key={index} className="bg-gray-900 rounded-lg p-4">
-                                    <div className="flex items-center justify-between mb-2">
-                                      <span className="text-sm text-gray-400">Command {index + 1}</span>
-                                      <button
-                                        onClick={() => copyToClipboard(command)}
-                                        className="flex items-center text-gray-400 hover:text-white transition-colors"
-                                      >
-                                        {copiedCommand === command ? (
-                                          <CheckCircle2 className="h-4 w-4 mr-1" />
-                                        ) : (
-                                          <Copy className="h-4 w-4 mr-1" />
-                                        )}
-                                        {copiedCommand === command ? 'Copied!' : 'Copy'}
-                                      </button>
-                                    </div>
-                                    <SyntaxHighlighter
-                                      language="bash"
-                                      style={tomorrow}
-                                      customStyle={{
-                                        margin: 0,
-                                        background: 'transparent',
-                                        fontSize: '14px',
-                                        fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
-                                      }}
-                                    >
-                                      {command}
-                                    </SyntaxHighlighter>
-                                  </div>
-                                ))}
-                              </div>
-                            ) : (
-                              <div className="text-center py-6 text-gray-500">
-                                <Terminal className="h-8 w-8 mx-auto mb-2 text-gray-300" />
-                                <p>No CLI commands available for this step.</p>
-                              </div>
-                            )}
-                            
-                           
-                          </div>
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                </div>
 
                 {/* Tips Section */}
                 <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
@@ -460,7 +345,7 @@ export default function TutorialPage({ params }: TutorialPageProps) {
                               <h5 className="font-medium text-blue-800 mb-2">Step {stepIndex + 1}: {step.title}</h5>
                               <ul className="space-y-1 text-sm text-blue-800">
                                 {step.tips.map((tip: any, index: number) => (
-                                  <li key={index}>• {tip}</li>
+                                  <li key={index}>• {renderTextWithLinks(tip)}</li>
                                 ))}
                               </ul>
                             </div>
