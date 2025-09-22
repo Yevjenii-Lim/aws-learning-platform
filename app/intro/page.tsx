@@ -382,7 +382,7 @@ export default function IntroPage() {
         
 
         {/* Navigation Tips */}
-        <div className="bg-white rounded-lg shadow-sm p-8 mt-8">
+        {/* <div className="bg-white rounded-lg shadow-sm p-8 mt-8">
           <h3 className="text-2xl font-bold text-gray-900 mb-6 text-center">Navigation Tips</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <motion.div
@@ -437,20 +437,9 @@ export default function IntroPage() {
               <p className="text-gray-600">Get immediate results and explanations for all quiz questions</p>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
-              className="text-center"
-            >
-              <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Calculator className="h-6 w-6 text-red-600" />
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Cost Calculator</h4>
-              <p className="text-gray-600">Practice with different scenarios to build financial estimation skills</p>
-            </motion.div>
+          
           </div>
-        </div>
+        </div> */}
       </div>
 
       <Footer />
