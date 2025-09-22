@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Search, Gamepad2, Settings, LogIn, ArrowLeft } from 'lucide-react';
+import { Search, Gamepad2, LogIn, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import ClientOnly from './ClientOnly';
 import { useAuth } from '../contexts/AuthContext';
@@ -18,7 +18,6 @@ interface HeaderProps {
   onSearchChange?: (value: string) => void;
   searchResults?: number;
   showGamesButton?: boolean;
-  showAdminButton?: boolean;
   customActions?: React.ReactNode;
 }
 
@@ -32,7 +31,6 @@ export default function Header({
   onSearchChange,
   searchResults = 0,
   showGamesButton = true,
-  showAdminButton = true,
   customActions
 }: HeaderProps) {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
@@ -116,11 +114,6 @@ export default function Header({
                 </div>
               )}
               
-              {showAdminButton && (
-                <Link href="/admin" className="text-gray-600 hover:text-gray-900">
-                  <Settings className="h-5 w-5" />
-                </Link>
-              )}
             </div>
           </div>
         </div>
