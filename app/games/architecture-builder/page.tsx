@@ -866,7 +866,7 @@ export default function ArchitectureExamplesPage() {
                             )}
                         {component.type === 'ec2' && (
                           <div>
-                                <div>EC2 Instance</div>
+                                <div></div>
                           </div>
                         )}
                         {component.type === 'rds' && (
@@ -881,7 +881,7 @@ export default function ArchitectureExamplesPage() {
                         )}
                         {component.type === 'alb' && (
                           <div>
-                            <div>Load Balancer</div>
+                            <div></div>
                           </div>
                         )}
                             {component.type === 'lambda' && (
@@ -896,7 +896,7 @@ export default function ArchitectureExamplesPage() {
                             )}
                             {component.type === 'elasticache' && (
                           <div>
-                                <div>ElastiCache</div>
+                                <div></div>
                           </div>
                         )}
                       </div>
