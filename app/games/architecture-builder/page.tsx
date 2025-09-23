@@ -258,7 +258,7 @@ export default function ArchitectureExamplesPage() {
   const architectureExamples: ArchitectureExample[] = [
     {
       id: 'vpc-lab',
-      title: 'Lab VPC with Public and Private Subnets',
+      title: 'VPC with Public and Private Subnets',
       description: 'A complete VPC setup with public and private subnets, Internet Gateway, NAT Gateway, and Bastion Server',
       category: 'Networking',
       difficulty: 'Beginner',
