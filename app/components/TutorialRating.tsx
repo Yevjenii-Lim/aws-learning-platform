@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Star, ThumbsUp, MessageCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
 import StarRating from './StarRating';
+import LoginModal from './LoginModal';
+import RegisterModal from './RegisterModal';
 
 interface TutorialRatingProps {
   tutorialId: string;
@@ -25,6 +27,19 @@ export default function TutorialRating({ tutorialId, serviceId }: TutorialRating
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+
+  // Modal handlers
+  const handleSwitchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
 
   // Fetch rating data
   const fetchRatingData = async () => {
@@ -206,10 +221,7 @@ export default function TutorialRating({ tutorialId, serviceId }: TutorialRating
             Please log in to rate this tutorial
           </p>
           <button
-            onClick={() => {
-              // TODO: Open login modal
-              console.log('Open login modal');
-            }}
+            onClick={() => setIsLoginModalOpen(true)}
             className="px-4 py-2 bg-aws-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
           >
             Log In to Rate
@@ -232,6 +244,20 @@ export default function TutorialRating({ tutorialId, serviceId }: TutorialRating
           </div>
         </div>
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
     </div>
   );
 }
