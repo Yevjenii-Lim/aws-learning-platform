@@ -14,6 +14,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/app/contexts/AuthContext';
+import LoginModal from './LoginModal';
+import RegisterModal from './RegisterModal';
 
 interface Comment {
   id: string;
@@ -35,12 +37,25 @@ interface CommentsProps {
 export default function Comments({ tutorialId }: CommentsProps) {
   const { user } = useAuth();
   const [comments, setComments] = useState<Comment[]>([]);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState<string | null>(null);
+
+  // Modal handlers
+  const handleSwitchToRegister = () => {
+    setIsLoginModalOpen(false);
+    setIsRegisterModalOpen(true);
+  };
+
+  const handleSwitchToLogin = () => {
+    setIsRegisterModalOpen(false);
+    setIsLoginModalOpen(true);
+  };
 
   // Fetch comments
   const fetchComments = async () => {
@@ -331,10 +346,7 @@ export default function Comments({ tutorialId }: CommentsProps) {
               Please log in to leave a comment and join the discussion.
             </p>
             <button
-              onClick={() => {
-                // TODO: Open login modal
-                console.log('Open login modal');
-              }}
+              onClick={() => setIsLoginModalOpen(true)}
               className="px-4 py-2 bg-aws-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
             >
               Log In to Comment
@@ -376,6 +388,20 @@ export default function Comments({ tutorialId }: CommentsProps) {
           </motion.div>
         </div>
       )}
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSwitchToRegister={handleSwitchToRegister}
+      />
+
+      {/* Register Modal */}
+      <RegisterModal
+        isOpen={isRegisterModalOpen}
+        onClose={() => setIsRegisterModalOpen(false)}
+        onSwitchToLogin={handleSwitchToLogin}
+      />
     </div>
   );
 }
